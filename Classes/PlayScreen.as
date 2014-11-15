@@ -53,7 +53,7 @@
 			scaleX = 1;
 			scaleY = 1;
 			
-			loadLevel(Levels.Level1);
+			loadLevel(Levels.Level3);
 			
 			debugDraw();		
 			
