@@ -5,9 +5,10 @@
 	public class NavigationEvent extends Event {
 		
 		public static const ON_PRESS_MENU_PLAY:String = "onPressMenuPlay";
-		public static const ON_PRESS_MENU_ABOUT:String = "onPressMenuAbout";
 		
-		
+		public function NavigationEvent(type:String) {
+			super(type);
+		}
 
 	}
 	

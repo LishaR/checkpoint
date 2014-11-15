@@ -1,0 +1,11 @@
+Hi, this is Evan.  I finished some stuff.  
+
+Things that need to be done soon:
+
+Making lava actually kill the player
+Ability to pick up and throw checkpoint
+Detect when the player is landed (either though collisions or raycasting or something)
+   so that you can't jump in mid-air
+Graphics, sound effects, and music
+Actually assign graphics to box2d objects based on their object type so that our final
+   game isn't just a bunch of rectangles.

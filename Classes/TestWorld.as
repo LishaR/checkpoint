@@ -1,0 +1,1 @@
+﻿;{#circle, -93, -73, 13, 13, 0, checkpoint, checkpoint, 1, 0.5, 0.2, {}};{#rectangle, 28.5, -5.5, 301, 37, 0, platform, platform, 1, 0.5, 0.2, {}}

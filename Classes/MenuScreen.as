@@ -1,6 +1,8 @@
 ﻿package  {
 	
 	import flash.events.Event;
+	import flash.events.MouseEvent;
+	import flash.display.MovieClip;
 	
 	public class MenuScreen extends MovieClip {
 
@@ -10,19 +12,13 @@
 		
 		private function onAddToStage(e:Event) {
 			removeEventListener(Event.ADDED_TO_STAGE, onAddToStage);
-			
-			aboutButton.addEventListener(, onAboutButtonPress);
-			playButton.addEventListener(, onPlayButtonPress);
-		}
-		
-		private function onAboutButtonPress(e:Event):void {
-			dispatchEvent(new NavigationEvent(NavigationEvent.ON_PRESS_));
+			playButton.addEventListener(MouseEvent.CLICK, onPlayButtonPress);
 		}
 		
 		private function onPlayButtonPress(e:Event):void {
-			dispatchEvent(new NavigationEvent(NavigationEvent.ON_PRESS_));
+			dispatchEvent(new NavigationEvent(NavigationEvent.ON_PRESS_MENU_PLAY));
 		}
-
+		
 	}
 	
 }
