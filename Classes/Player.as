@@ -12,7 +12,8 @@
 		
 		private var checkpointHeld:Boolean;
 		private var canJump:Boolean;
-
+		private var dead:Boolean;
+		
 		public function Player(world:b2World, obj:Object) {
 			super("player");
 			
@@ -37,7 +38,8 @@
 			body.SetUserData(this);
 			
 			checkpointHeld = false;
-			canJump = false;			
+			canJump = false;
+			dead = false;
 		}
 				
 		public function getCheckpointHeld():Boolean {
@@ -47,6 +49,10 @@
 		public function getCanJump():Boolean {
 			return canJump;
 		}
+
+		public function getDead():Boolean {
+			return dead;
+		}
 		
 		public function setCheckpointHeld(newCheckpointHeld:Boolean):void {
 			checkpointHeld = newCheckpointHeld;
@@ -54,6 +60,10 @@
 		
 		public function setCanJump(newCanJump:Boolean):void {
 			canJump = newCanJump;
+		}
+		
+		public function setDead(newDead:Boolean):void {
+			dead = newDead;
 		}
 	}
 	
