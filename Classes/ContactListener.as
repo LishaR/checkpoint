@@ -25,6 +25,8 @@
 					
 					if (fixtureB.GetBody().GetUserData().getEntityType() == "platform") {
 						var normal:b2Vec2 = contact.GetManifold().m_localPlaneNormal;
+
+						playerBody.GetUserData().setCanJump(true);				
 						
 						/* // Prevent wall jumping
 						if (b2Math.Dot(normal, new b2Vec2(0,1)) > 0.9) {
