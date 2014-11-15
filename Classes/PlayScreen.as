@@ -3,8 +3,10 @@
 	import flash.display.MovieClip;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.events.MouseEvent;
     import flash.net.URLLoader;
     import flash.net.URLRequest;
+    import flash.geom.Point;
 	
 	import Box2D.Dynamics.*;
     import Box2D.Collision.*;
@@ -20,13 +22,22 @@
 		private static const MAX_VELOCITY:Number = 7; // max player velocity in horizontal direction (running)
 		private static const JUMP_STRENGTH:Number = 10; 
 		private static const HORIZONTAL_ACCEL:Number = 1.5; // running acceleration
+		private static const PLAYER_RESTIT:Number = 0.05; // player bounciness on a 0 to 1 scale
+		private static const PLAYER_FRICTION:Number = 0.3; // player friction
+		private static const CHECKPOINT_PICKUP_DIST:Number = 1.2; // distance the player has to be from checkpoint to pick it up
+		private static const THROW_STRENGTH:Number = 10; // velocity the player throws the checkpoint
+		private static const THROW_START_DIST:Number = 1; // distance from the player the checkpoint spawns from when it is thrown
+		private static const PICKUP_DELAY:Number = 0.5; // min time after the checkpoint is thrown before it can be picked back up
 		
-		private const worldScale:Number = 20; // meters per pixel, I think
+		private const worldScale:Number = 20; // pixels per meter
+		
 		// global variables per level
 		private var world:b2World;
 		private var player:b2Body;
 		private var goal:b2Body;
 		private var checkpoint:b2Body;
+		private var checkpointHeld:Boolean;
+		private var pickupTimer:Number;
 		
 		public function PlayScreen() {
 			addEventListener(Event.ADDED_TO_STAGE, onAddToStage);
@@ -48,6 +59,7 @@
 			debugDraw();		
 			
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
+			stage.addEventListener(MouseEvent.CLICK, onMouseClick);
 		}
 		
 		// Load one of the levels defined as static consts in Levels
@@ -56,6 +68,8 @@
 			player = null;
 			goal = null;
 			checkpoint = null;
+			checkpointHeld = false;
+			pickupTimer = 0;
             var objects:Vector.<Object> = parse(levelData);
 			for each (var obj:Object in objects) {
 				
@@ -152,6 +166,10 @@
 				obj.density = Number(props[8]);
 				obj.friction = Number(props[9]);
 				obj.restit = Number(props[10]);
+				if (obj.type == "player") {
+					obj.restit = PLAYER_RESTIT;
+					obj.friction = PLAYER_FRICTION;
+				}
 				objArray.push(obj);
 			}
 			return objArray;
@@ -170,9 +188,47 @@
             world.SetDebugDraw(debugDraw);
         }
 		
+		private function onMouseClick(e:MouseEvent) {
+			var playerPos:b2Vec2 = player.GetWorldCenter();
+			var mousePosX:Number = e.stageX - x;
+			var mousePosY:Number = e.stageY - y;
+			var playerX:Number = playerPos.x*worldScale;
+			var playerY:Number = playerPos.y*worldScale;
+			
+			var dist:b2Vec2 = new b2Vec2(mousePosX - playerX, mousePosY - playerY);
+			dist.Normalize();
+			dist.Multiply(THROW_STRENGTH);
+			
+			var throwDist:b2Vec2 = dist.Copy();
+			throwDist.Normalize();
+			throwDist.Multiply(THROW_START_DIST);
+			
+			if (checkpointHeld) {
+				var spawnPos:b2Vec2 = player.GetPosition().Copy();
+				spawnPos.Add(throwDist);
+				checkpoint.SetPosition(spawnPos);
+				
+				var vel:b2Vec2 = player.GetLinearVelocity().Copy();
+				vel.Add(dist);
+				checkpoint.SetLinearVelocity(vel);
+				
+				checkpointHeld = false;
+				pickupTimer = PICKUP_DELAY;
+			}
+		}
+		
 		// called every tick
         private function onEnterFrame(e:Event):void {
-			//Key Handler
+			pickupTimer -= 1/FRAME_RATE;
+			// collision detection
+			if (checkpoint != null) {
+				var dist:b2Vec2 = player.GetPosition().Copy();
+				dist.Subtract(checkpoint.GetPosition());
+				if (dist.Length() < CHECKPOINT_PICKUP_DIST && pickupTimer < 0) {
+					checkpointHeld = true;
+					checkpoint.SetPosition(new b2Vec2(int.MAX_VALUE, int.MAX_VALUE))
+				}
+			}
 			
 			// INPUT CLASS AND KEYCODES CLASS ARE TEMPORARY JUST FOR TESTING PURPOSES.  
 			// It's code I found on the internet because I'm gonna get rid of it soon anyway.
