@@ -112,7 +112,7 @@
 			body.SetUserData(this);
 			
 			checkpointHeld = false;
-			canJump = false;
+			canJump = true;
 
 			playerRect=new Rectangle(0,0,32,64);			
 
