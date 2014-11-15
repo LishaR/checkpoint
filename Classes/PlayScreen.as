@@ -26,20 +26,15 @@
 		private static const JUMP_STRENGTH:Number = 10; 
 		private static const HORIZONTAL_ACCEL:Number = 1.5; // running acceleration
 		private static const CHECKPOINT_PICKUP_DIST:Number = 1.2; // distance the player has to be from checkpoint to pick it up
-		private static const THROW_STRENGTH:Number = 10; // velocity the player throws the checkpoint
+		private static const THROW_STRENGTH:Number = 15; // velocity the player throws the checkpoint
 		private static const THROW_START_DIST:Number = 1; // distance from the player the checkpoint spawns from when it is thrown
 		private static const PICKUP_DELAY:Number = 0.2; // min time after the checkpoint is thrown before it can be picked back up
-		
-		private static const REGULAR_CHECKPOINT_RESTIT:Number = 0.1; // bounciness on a 0 to 1 scale
-		private static const REGULAR_CHECKPOINT_FRICTION:Number = 0.3; // 0 to 1 scale
-		private static const BOUNCY_CHECKPOINT_RESTIT:Number = 0.7; // bounciness on a 0 to 1 scale
-		private static const BOUNCY_CHECKPOINT_FRICTION:Number = 0.05; // 0 to 1 scale
 				
 		// global variables per level
 		private var world:b2World;
 		private var player:Player;
 		private var goal:b2Body;
-		private var checkpoint:b2Body;
+		private var checkpoint:Checkpoint;
 		private var pickupTimer:Number; // used to make sure the player doesn't pick up the checkpoint like 0.03 seconds after he throws it.
 		
 		public function PlayScreen() {
@@ -57,7 +52,7 @@
 			scaleX = 1;
 			scaleY = 1;
 			
-			loadLevel(Levels.Level2);
+			loadLevel(Levels.Level1);
 			
 			debugDraw();		
 			
@@ -85,16 +80,6 @@
 						bodyDef.fixedRotation = true;
 					break;
 					
-					case "checkpoint":
-						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); // temporarily a box
-						bodyDef.type = b2Body.b2_dynamicBody;
-					break;
-					
-					case "bouncyCheckpoint":
-						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); // temporarily a box
-						bodyDef.type = b2Body.b2_dynamicBody;
-					break;
-					
 					case "platform":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
 						bodyDef.type = b2Body.b2_staticBody;
@@ -114,7 +99,7 @@
 						trace("Level object type not set");
 				}
 				
-				if (obj.type != "player") {
+				if (obj.type != "player" && obj.type != "checkpoint" && obj.type != "bouncyCheckpoint") {
 					// look at body y position to prevent it to be upside down
 					bodyDef.position.Set(obj.x/WORLD_SCALE, obj.y/WORLD_SCALE);
 					
@@ -140,9 +125,9 @@
 					
 					case "bouncyCheckpoint":
 					case "checkpoint":
-						checkpoint = body;
+						checkpoint = new Checkpoint(world, obj);
 					
-						var contactListener:ContactListener = new ContactListener(checkpoint);
+						var contactListener:ContactListener = new ContactListener(checkpoint.getBody());
 						world.SetContactListener(contactListener);
 					break;
 					
@@ -212,13 +197,6 @@
 				obj.density = Number(props[8]);
 				obj.friction = Number(props[9]);
 				obj.restit = Number(props[10]);
-				if (obj.type == "checkpoint") {
-					obj.restit = REGULAR_CHECKPOINT_RESTIT;
-					obj.friction = REGULAR_CHECKPOINT_FRICTION;
-				} else if (obj.type == "bouncyCheckpoint") {
-					obj.restit = BOUNCY_CHECKPOINT_RESTIT;
-					obj.friction = BOUNCY_CHECKPOINT_FRICTION;
-				}
 
 				objArray.push(obj);
 			}
@@ -257,11 +235,11 @@
 			if (player.getCheckpointHeld()) {
 				var spawnPos:b2Vec2 = player.getBody().GetPosition().Copy();
 				spawnPos.Add(throwDist);
-				checkpoint.SetPosition(spawnPos);
+				checkpoint.getBody().SetPosition(spawnPos);
 				
 				var vel:b2Vec2 = player.getBody().GetLinearVelocity().Copy();
 				vel.Add(dist);
-				checkpoint.SetLinearVelocity(vel);
+				checkpoint.getBody().SetLinearVelocity(vel);
 				
 				player.setCheckpointHeld(false);
 				pickupTimer = PICKUP_DELAY;
@@ -274,13 +252,13 @@
 			// collision detection
 			if (checkpoint != null) {
 				var dist:b2Vec2 = player.getBody().GetPosition().Copy();
-				dist.Subtract(checkpoint.GetPosition());
+				dist.Subtract(checkpoint.getBody().GetPosition());
 				if (dist.Length() < CHECKPOINT_PICKUP_DIST && pickupTimer < 0) {
 					player.setCheckpointHeld(true);
 					// LOLZ hack to make the checkpoint disappear without removing it
 					// There isn't an easy way to remove the checkpoint without totally destroying it
 					// and having to recreate it.  
-					checkpoint.SetPosition(new b2Vec2(int.MAX_VALUE, int.MAX_VALUE)) 
+					checkpoint.getBody().SetPosition(new b2Vec2(99999, 99999));
 				}
 			}
 			
@@ -301,6 +279,17 @@
 				// hack to make player wake up.... FIX LATER
 				player.getBody().SetLinearVelocity(new b2Vec2(player.getBody().GetLinearVelocity().x, -JUMP_STRENGTH));
 				player.setCanJump(false);
+			}
+			
+			if (player.getDead()) {
+				player.getBody().SetPosition(checkpoint.getBody().GetPosition());
+				player.setDead(false);
+			}
+			
+			if (checkpoint.getDead()) {
+				checkpoint.getBody().SetPosition(new b2Vec2(99999, 99999));
+				player.setCheckpointHeld(true);
+				checkpoint.setDead(false);
 			}
 			
 			player.getBody().SetAwake(true);

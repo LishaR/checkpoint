@@ -41,6 +41,10 @@
 
 		private var myImageLoader:Loader;
 		private var screen:MovieClip;
+
+
+		private var dead:Boolean;
+
 		public function loadSprite():void {
 
 			playerFrame=new BitmapData(32,64,true, 0x00000000);
@@ -96,6 +100,8 @@
 			playerRect=new Rectangle(0,0,32,64);			
 
 			loadSprite();
+
+			dead = false;
 		}
 				
 		public function getCheckpointHeld():Boolean {
@@ -104,6 +110,10 @@
 
 		public function getCanJump():Boolean {
 			return canJump;
+		}
+
+		public function getDead():Boolean {
+			return dead;
 		}
 		
 		public function setCheckpointHeld(newCheckpointHeld:Boolean):void {
@@ -163,6 +173,11 @@
 				playerRect.x = tileWidth;
 				playerRect.y = 0;
 				playerFrame.copyPixels(playerSpritesheet.bitmapData,playerRect, new Point(0,0));
+		}
+		
+		public function setDead(newDead:Boolean):void {
+			dead = newDead;
+
 		}
 	}
 	
