@@ -10,10 +10,10 @@
 		private static const PLAYER_FRICTION:Number = 0.3; // player friction
 		private static const WORLD_SCALE:Number = 20; // pixels per meter
 		
-		public var playerBody:b2Body;
+		private var playerBody:b2Body;
 		
-		public var checkpointHeld:Boolean;
-		public var canJump:Boolean;
+		private var checkpointHeld:Boolean;
+		private var canJump:Boolean;
 
 		public function Player(world:b2World, obj:Object) {
 			super("player");
@@ -41,17 +41,25 @@
 			checkpointHeld = false;
 			canJump = false;			
 		}
-		
-		public function setCheckpointHeld(newCheckpointHeld:Boolean):void {
-			checkpointHeld = newCheckpointHeld;
-		}
-		
+
 		public function getBody():b2Body {
 			return playerBody;
 		}
-		
+				
 		public function getCheckpointHeld():Boolean {
 			return checkpointHeld;
+		}
+
+		public function getCanJump():Boolean {
+			return canJump;
+		}
+		
+		public function setCheckpointHeld(newCheckpointHeld:Boolean):void {
+			checkpointHeld = newCheckpointHeld;
+		}		
+		
+		public function setCanJump(newCanJump:Boolean):void {
+			canJump = newCanJump;
 		}
 	}
 	

@@ -67,9 +67,6 @@
 		// Load one of the levels defined as static consts in Levels
 		private function loadLevel(levelData:String) {
 			world = new b2World(new b2Vec2(0, GRAVITY_STRENGTH), true);
-			var contactListener = new ContactListener();
-			world.SetContactListener(contactListener);
-			
 			player = null;
 			goal = null;
 			checkpoint = null;
@@ -138,7 +135,14 @@
 					case "bouncyCheckpoint":
 					case "checkpoint":
 						checkpoint = body;
+					
+						var contactListener:ContactListener = new ContactListener(checkpoint);
+						world.SetContactListener(contactListener);
 					break;
+					
+					case "platform":
+					case "lava":
+						body.SetUserData(new Entity("platform"));
 				}
 			}
 			if (player == null) {
@@ -179,7 +183,6 @@
 					obj.restit = BOUNCY_CHECKPOINT_RESTIT;
 					obj.friction = BOUNCY_CHECKPOINT_FRICTION;
 				}
-
 
 				objArray.push(obj);
 			}
@@ -258,9 +261,10 @@
 				}
 			}
 			
-			if (Input.kd("W", "UP")) {
+			if (Input.kd("W", "UP") && player.getCanJump()) {
 				// hack to make player wake up.... FIX LATER
 				player.getBody().SetLinearVelocity(new b2Vec2(player.getBody().GetLinearVelocity().x, -JUMP_STRENGTH));
+				player.setCanJump(false);
 			}
 			
 			player.getBody().SetAwake(true);
