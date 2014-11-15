@@ -21,8 +21,6 @@
 		private static const PLAYER_FRICTION:Number = 0.3; // player friction
 		private static const WORLD_SCALE:Number = 20; // pixels per meter
 		
-		private var playerBody:b2Body;
-		
 		private var checkpointHeld:Boolean;
 		private var canJump:Boolean;
 
@@ -88,9 +86,9 @@
 			fixtureDef.restitution = PLAYER_RESTIT;
 			fixtureDef.friction = PLAYER_FRICTION;
 
-			playerBody = world.CreateBody(bodyDef);
-			playerBody.CreateFixture(fixtureDef);
-			playerBody.SetUserData(this);
+			body = world.CreateBody(bodyDef);
+			body.CreateFixture(fixtureDef);
+			body.SetUserData(this);
 			
 			checkpointHeld = false;
 			canJump = false;
@@ -98,10 +96,6 @@
 			playerRect=new Rectangle(0,0,32,64);			
 
 			loadSprite();
-		}
-
-		public function getBody():b2Body {
-			return playerBody;
 		}
 				
 		public function getCheckpointHeld():Boolean {

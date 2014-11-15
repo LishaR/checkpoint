@@ -147,8 +147,12 @@
 					break;
 					
 					case "platform":
+						body.SetUserData(new Entity("platform", body));
+					break;
+					
 					case "lava":
-						body.SetUserData(new Entity("platform"));
+						body.SetUserData(new Entity("lava", body));
+					break;
 				}
 			}
 			if (player == null) {

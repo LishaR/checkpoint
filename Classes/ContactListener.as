@@ -24,11 +24,20 @@
 					var playerBody:b2Body = fixtureA.GetBody();
 					
 					if (fixtureB.GetBody().GetUserData().getEntityType() == "platform") {
-						playerBody.GetUserData().setCanJump(true);
-					}
-					
-					if (fixtureB.GetBody().GetUserData().getEntityType() == "lava") {
-						playerBody.SetPosition(checkpointBody.GetPosition());
+						var normal:b2Vec2 = contact.GetManifold().m_localPlaneNormal;
+
+						playerBody.GetUserData().setCanJump(true);				
+						
+						/* // Prevent wall jumping
+						if (b2Math.Dot(normal, new b2Vec2(0,1)) > 0.9) {
+							playerBody.GetUserData().setCanJump(true);
+						}
+						*/ 
+					} else if (fixtureB.GetBody().GetUserData().getEntityType() == "lava") {
+						trace("lava!");
+						playerBody.SetPosition(new b2Vec2(-9999, -9999));
+						trace(playerBody.GetPosition().x);
+						trace(playerBody.GetPosition().y);
 					}
 				}
             }
