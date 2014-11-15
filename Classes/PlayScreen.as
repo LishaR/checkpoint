@@ -2,6 +2,7 @@
 	
 	import flash.display.MovieClip;
 	import flash.display.Sprite;
+	import flash.display.Graphics;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
     import flash.net.URLLoader;
@@ -18,7 +19,7 @@
 		
 		private static const CALCS_PER_TICK:int = 5; // iterations of physics engine per tick
 		private static const FRAME_RATE:Number = 30; // frames per second
-		private static const WORLD_SCALE:Number = 20; // pixels per meter
+		public static const WORLD_SCALE:Number = 20; // pixels per meter
 		
 		private static const GRAVITY_STRENGTH:Number = 25; // m/s^2 ... this value isnt' 9.8 since the scales are a bit random.
 		private static const MAX_VELOCITY:Number = 7; // max player velocity in horizontal direction (running)
@@ -83,11 +84,16 @@
 					case "platform":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
 						bodyDef.type = b2Body.b2_staticBody;
+
+						var polyCoords:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
+						drawShape(polyCoords, 0x251e22);
 					break;
 					
 					case "lava":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
 						bodyDef.type = b2Body.b2_staticBody;
+						var polyCoords:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
+						drawShape(polyCoords, 0x4f403a);
 					break;
 					
 					default:
@@ -111,7 +117,7 @@
 				// set global variables
 				switch (obj.type) {
 					case "player":
-						player = new Player(world, obj);
+						player = new Player(world, obj, this);
 					break;
 					
 					case "goal":
@@ -144,6 +150,32 @@
 			if (checkpoint == null) {
 				trace("Warning: No checkpoint in level");
 			}
+		}
+
+		// draws a shape of a particular color.
+		// points is an array of points, with even indices as x coords, and odd as y coords
+		// color is the color
+		private function drawShape(points, color) {
+			// add graphics for a particular shape
+			var platformImg:Sprite = new Sprite();
+			var g:Graphics = platformImg.graphics;
+			// create an array of the coordinates in the shape (which is a rectangle right now)
+			// and then fill the graphics with those coordinates
+
+			// fill all platforms with this color (pure black at the moment)
+			g.beginFill(color);
+
+			// and then iterate through all the points in the point array to create the shape
+			for(var i:int = 0; i < points.length; i += 2){
+			    if(i == 0){
+			        g.moveTo(points[i], points[i + 1]);
+			    } else {
+			        g.lineTo(points[i], points[i + 1]);
+			    }
+			}
+			g.endFill();
+			// add a mouse-event to the hotspot etc.
+			addChild(platformImg);
 		}
 		
 		// Parse the input into a vector(parametrized array) of Objects
@@ -272,6 +304,8 @@
             y = stage.stageHeight/2-pos_y*scaleY;
             world.ClearForces();
             world.DrawDebugData();
+
+            player.tick();
         }
 		
 	}
