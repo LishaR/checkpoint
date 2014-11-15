@@ -18,18 +18,24 @@
 		
 		private static const CALCS_PER_TICK:int = 5; // iterations of physics engine per tick
 		private static const FRAME_RATE:Number = 30; // frames per second
-		private static const GRAVITY_STRENGTH:Number = 25; // m/s^2 ?
+		private static const WORLD_SCALE:Number = 20; // pixels per meter
+		
+		private static const GRAVITY_STRENGTH:Number = 25; // m/s^2 ... this value isnt' 9.8 since the scales are a bit random.
 		private static const MAX_VELOCITY:Number = 7; // max player velocity in horizontal direction (running)
 		private static const JUMP_STRENGTH:Number = 10; 
 		private static const HORIZONTAL_ACCEL:Number = 1.5; // running acceleration
-		private static const PLAYER_RESTIT:Number = 0.05; // player bounciness on a 0 to 1 scale
-		private static const PLAYER_FRICTION:Number = 0.3; // player friction
 		private static const CHECKPOINT_PICKUP_DIST:Number = 1.2; // distance the player has to be from checkpoint to pick it up
 		private static const THROW_STRENGTH:Number = 10; // velocity the player throws the checkpoint
 		private static const THROW_START_DIST:Number = 1; // distance from the player the checkpoint spawns from when it is thrown
-		private static const PICKUP_DELAY:Number = 0.5; // min time after the checkpoint is thrown before it can be picked back up
+		private static const PICKUP_DELAY:Number = 0.2; // min time after the checkpoint is thrown before it can be picked back up
 		
-		private const worldScale:Number = 20; // pixels per meter
+		private static const PLAYER_RESTIT:Number = 0.01; // player bounciness on a 0 to 1 scale
+		private static const PLAYER_FRICTION:Number = 0.3; // player friction
+		private static const REGULAR_CHECKPOINT_RESTIT:Number = 0.1; // bounciness on a 0 to 1 scale
+		private static const REGULAR_CHECKPOINT_FRICTION:Number = 0.3; // 0 to 1 scale
+		private static const BOUNCY_CHECKPOINT_RESTIT:Number = 0.7; // bounciness on a 0 to 1 scale
+		private static const BOUNCY_CHECKPOINT_FRICTION:Number = 0.05; // 0 to 1 scale
+		
 		
 		// global variables per level
 		private var world:b2World;
@@ -37,7 +43,7 @@
 		private var goal:b2Body;
 		private var checkpoint:b2Body;
 		private var checkpointHeld:Boolean;
-		private var pickupTimer:Number;
+		private var pickupTimer:Number; // used to make sure the player doesn't pick up the checkpoint like 0.03 seconds after he throws it.
 		
 		public function PlayScreen() {
 			addEventListener(Event.ADDED_TO_STAGE, onAddToStage);
@@ -78,29 +84,34 @@
 				
                	switch (obj.type) {
 					case "player":
-						polygonShape.SetAsBox(obj.w/2/worldScale, obj.h/2/worldScale); // temporarily? a box
+						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); // temporarily? a box
 						bodyDef.type = b2Body.b2_dynamicBody;
 						bodyDef.fixedRotation = true;
 					break;
 					
 					case "goal":
-						polygonShape.SetAsBox(obj.w/2/worldScale, obj.h/2/worldScale); // temporarily a box
+						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); // temporarily a box
 						bodyDef.type = b2Body.b2_staticBody;
 						bodyDef.fixedRotation = true;
 					break;
 					
 					case "checkpoint":
-						polygonShape.SetAsBox(obj.w/2/worldScale, obj.h/2/worldScale); // temporarily a box
+						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); // temporarily a box
+						bodyDef.type = b2Body.b2_dynamicBody;
+					break;
+					
+					case "bouncyCheckpoint":
+						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); // temporarily a box
 						bodyDef.type = b2Body.b2_dynamicBody;
 					break;
 					
 					case "platform":
-						polygonShape.SetAsBox(obj.w/2/worldScale, obj.h/2/worldScale);
+						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
 						bodyDef.type = b2Body.b2_staticBody;
 					break;
 					
 					case "lava":
-						polygonShape.SetAsBox(obj.w/2/worldScale, obj.h/2/worldScale); 
+						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
 						bodyDef.type = b2Body.b2_staticBody;
 					break;
 					
@@ -109,7 +120,7 @@
 				}
 				
                 // look at body y position to prevent it to be upside down
-                bodyDef.position.Set(obj.x/worldScale, obj.y/worldScale);
+                bodyDef.position.Set(obj.x/WORLD_SCALE, obj.y/WORLD_SCALE);
 				
 				var fixtureDef:b2FixtureDef = new b2FixtureDef();
                 fixtureDef.shape = polygonShape;
@@ -130,6 +141,7 @@
 						goal = body;
 					break;
 					
+					case "bouncyCheckpoint":
 					case "checkpoint":
 						checkpoint = body;
 					break;
@@ -169,7 +181,15 @@
 				if (obj.type == "player") {
 					obj.restit = PLAYER_RESTIT;
 					obj.friction = PLAYER_FRICTION;
+				} else if (obj.type == "checkpoint") {
+					obj.restit = REGULAR_CHECKPOINT_RESTIT;
+					obj.friction = REGULAR_CHECKPOINT_FRICTION;
+				} else if (obj.type == "bouncyCheckpoint") {
+					obj.restit = BOUNCY_CHECKPOINT_RESTIT;
+					obj.friction = BOUNCY_CHECKPOINT_FRICTION;
 				}
+
+
 				objArray.push(obj);
 			}
 			return objArray;
@@ -182,18 +202,19 @@
             var debugSprite:Sprite = new Sprite();
             addChild(debugSprite);
             debugDraw.SetSprite(debugSprite);
-            debugDraw.SetDrawScale(worldScale);
+            debugDraw.SetDrawScale(WORLD_SCALE);
             debugDraw.SetFlags(b2DebugDraw.e_shapeBit|b2DebugDraw.e_jointBit);
             debugDraw.SetFillAlpha(0.5);
             world.SetDebugDraw(debugDraw);
         }
 		
+		// for now, mouse clicks throw the checkpoint when available.
 		private function onMouseClick(e:MouseEvent) {
 			var playerPos:b2Vec2 = player.GetWorldCenter();
 			var mousePosX:Number = e.stageX - x;
 			var mousePosY:Number = e.stageY - y;
-			var playerX:Number = playerPos.x*worldScale;
-			var playerY:Number = playerPos.y*worldScale;
+			var playerX:Number = playerPos.x*WORLD_SCALE;
+			var playerY:Number = playerPos.y*WORLD_SCALE;
 			
 			var dist:b2Vec2 = new b2Vec2(mousePosX - playerX, mousePosY - playerY);
 			dist.Normalize();
@@ -226,7 +247,10 @@
 				dist.Subtract(checkpoint.GetPosition());
 				if (dist.Length() < CHECKPOINT_PICKUP_DIST && pickupTimer < 0) {
 					checkpointHeld = true;
-					checkpoint.SetPosition(new b2Vec2(int.MAX_VALUE, int.MAX_VALUE))
+					// LOLZ hack to make the checkpoint disappear without removing it
+					// There isn't an easy way to remove the checkpoint without totally destroying it
+					// and having to recreate it.  
+					checkpoint.SetPosition(new b2Vec2(int.MAX_VALUE, int.MAX_VALUE)) 
 				}
 			}
 			
@@ -244,13 +268,15 @@
 			}
 			
 			if (Input.kd("W", "UP")) {
+				// hack to make player wake up.... FIX LATER
 				player.SetLinearVelocity(new b2Vec2(player.GetLinearVelocity().x, -JUMP_STRENGTH));
 			}
 			
+			player.SetAwake(true);
 			player.SetActive(true);
             world.Step(1/FRAME_RATE, CALCS_PER_TICK, CALCS_PER_TICK);
-			var pos_x:Number = player.GetWorldCenter().x*worldScale;
-            var pos_y:Number = player.GetWorldCenter().y*worldScale;
+			var pos_x:Number = player.GetWorldCenter().x*WORLD_SCALE;
+            var pos_y:Number = player.GetWorldCenter().y*WORLD_SCALE;
             x = stage.stageWidth/2-pos_x*scaleX;
             y = stage.stageHeight/2-pos_y*scaleY;
             world.ClearForces();
