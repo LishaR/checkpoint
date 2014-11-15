@@ -155,8 +155,6 @@
 			
 				playerRect.x = 0;
 				playerRect.y = 0;
-				trace(playerFrame);
-				trace(playerSpritesheet);
 				playerFrame.copyPixels(playerSpritesheet.bitmapData,playerRect, new Point(0,0));
 		}
 
