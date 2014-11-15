@@ -29,20 +29,16 @@
 		private static const THROW_START_DIST:Number = 1; // distance from the player the checkpoint spawns from when it is thrown
 		private static const PICKUP_DELAY:Number = 0.2; // min time after the checkpoint is thrown before it can be picked back up
 		
-		private static const PLAYER_RESTIT:Number = 0.01; // player bounciness on a 0 to 1 scale
-		private static const PLAYER_FRICTION:Number = 0.3; // player friction
 		private static const REGULAR_CHECKPOINT_RESTIT:Number = 0.1; // bounciness on a 0 to 1 scale
 		private static const REGULAR_CHECKPOINT_FRICTION:Number = 0.3; // 0 to 1 scale
 		private static const BOUNCY_CHECKPOINT_RESTIT:Number = 0.7; // bounciness on a 0 to 1 scale
 		private static const BOUNCY_CHECKPOINT_FRICTION:Number = 0.05; // 0 to 1 scale
-		
-		
+				
 		// global variables per level
 		private var world:b2World;
-		private var player:b2Body;
+		private var player:Player;
 		private var goal:b2Body;
 		private var checkpoint:b2Body;
-		private var checkpointHeld:Boolean;
 		private var pickupTimer:Number; // used to make sure the player doesn't pick up the checkpoint like 0.03 seconds after he throws it.
 		
 		public function PlayScreen() {
@@ -71,10 +67,12 @@
 		// Load one of the levels defined as static consts in Levels
 		private function loadLevel(levelData:String) {
 			world = new b2World(new b2Vec2(0, GRAVITY_STRENGTH), true);
+			var contactListener = new ContactListener();
+			world.SetContactListener(contactListener);
+			
 			player = null;
 			goal = null;
 			checkpoint = null;
-			checkpointHeld = false;
 			pickupTimer = 0;
             var objects:Vector.<Object> = parse(levelData);
 			for each (var obj:Object in objects) {
@@ -83,12 +81,6 @@
 				var polygonShape:b2PolygonShape=new b2PolygonShape();		
 				
                	switch (obj.type) {
-					case "player":
-						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); // temporarily? a box
-						bodyDef.type = b2Body.b2_dynamicBody;
-						bodyDef.fixedRotation = true;
-					break;
-					
 					case "goal":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); // temporarily a box
 						bodyDef.type = b2Body.b2_staticBody;
@@ -119,22 +111,24 @@
 						trace("Level object type not set");
 				}
 				
-                // look at body y position to prevent it to be upside down
-                bodyDef.position.Set(obj.x/WORLD_SCALE, obj.y/WORLD_SCALE);
-				
-				var fixtureDef:b2FixtureDef = new b2FixtureDef();
-                fixtureDef.shape = polygonShape;
-                fixtureDef.density = obj.density;
-                fixtureDef.restitution = obj.restit;
-                fixtureDef.friction = obj.friction;
-				
-				var body:b2Body = world.CreateBody(bodyDef);
-				body.CreateFixture(fixtureDef);
-				
+				if (obj.type != "player") {
+					// look at body y position to prevent it to be upside down
+					bodyDef.position.Set(obj.x/WORLD_SCALE, obj.y/WORLD_SCALE);
+					
+					var fixtureDef:b2FixtureDef = new b2FixtureDef();
+					fixtureDef.shape = polygonShape;
+					fixtureDef.density = obj.density;
+					fixtureDef.restitution = obj.restit;
+					fixtureDef.friction = obj.friction;
+					
+					var body:b2Body = world.CreateBody(bodyDef);
+					body.CreateFixture(fixtureDef);
+				}
+					
 				// set global variables
 				switch (obj.type) {
 					case "player":
-						player = body;
+						player = new Player(world, obj);
 					break;
 					
 					case "goal":
@@ -178,10 +172,7 @@
 				obj.density = Number(props[8]);
 				obj.friction = Number(props[9]);
 				obj.restit = Number(props[10]);
-				if (obj.type == "player") {
-					obj.restit = PLAYER_RESTIT;
-					obj.friction = PLAYER_FRICTION;
-				} else if (obj.type == "checkpoint") {
+				if (obj.type == "checkpoint") {
 					obj.restit = REGULAR_CHECKPOINT_RESTIT;
 					obj.friction = REGULAR_CHECKPOINT_FRICTION;
 				} else if (obj.type == "bouncyCheckpoint") {
@@ -210,7 +201,7 @@
 		
 		// for now, mouse clicks throw the checkpoint when available.
 		private function onMouseClick(e:MouseEvent) {
-			var playerPos:b2Vec2 = player.GetWorldCenter();
+			var playerPos:b2Vec2 = player.getBody().GetWorldCenter();
 			var mousePosX:Number = e.stageX - x;
 			var mousePosY:Number = e.stageY - y;
 			var playerX:Number = playerPos.x*WORLD_SCALE;
@@ -224,16 +215,16 @@
 			throwDist.Normalize();
 			throwDist.Multiply(THROW_START_DIST);
 			
-			if (checkpointHeld) {
-				var spawnPos:b2Vec2 = player.GetPosition().Copy();
+			if (player.getCheckpointHeld()) {
+				var spawnPos:b2Vec2 = player.getBody().GetPosition().Copy();
 				spawnPos.Add(throwDist);
 				checkpoint.SetPosition(spawnPos);
 				
-				var vel:b2Vec2 = player.GetLinearVelocity().Copy();
+				var vel:b2Vec2 = player.getBody().GetLinearVelocity().Copy();
 				vel.Add(dist);
 				checkpoint.SetLinearVelocity(vel);
 				
-				checkpointHeld = false;
+				player.setCheckpointHeld(false);
 				pickupTimer = PICKUP_DELAY;
 			}
 		}
@@ -243,10 +234,10 @@
 			pickupTimer -= 1/FRAME_RATE;
 			// collision detection
 			if (checkpoint != null) {
-				var dist:b2Vec2 = player.GetPosition().Copy();
+				var dist:b2Vec2 = player.getBody().GetPosition().Copy();
 				dist.Subtract(checkpoint.GetPosition());
 				if (dist.Length() < CHECKPOINT_PICKUP_DIST && pickupTimer < 0) {
-					checkpointHeld = true;
+					player.setCheckpointHeld(true);
 					// LOLZ hack to make the checkpoint disappear without removing it
 					// There isn't an easy way to remove the checkpoint without totally destroying it
 					// and having to recreate it.  
@@ -257,26 +248,26 @@
 			// INPUT CLASS AND KEYCODES CLASS ARE TEMPORARY JUST FOR TESTING PURPOSES.  
 			// It's code I found on the internet because I'm gonna get rid of it soon anyway.
 			if (Input.kd("A", "LEFT")) {
-				if (player.GetLinearVelocity().x > -MAX_VELOCITY) {
-					player.ApplyImpulse(new b2Vec2(-HORIZONTAL_ACCEL, 0), player.GetWorldCenter());
+				if (player.getBody().GetLinearVelocity().x > -MAX_VELOCITY) {
+					player.getBody().ApplyImpulse(new b2Vec2(-HORIZONTAL_ACCEL, 0), player.getBody().GetWorldCenter());
 				}
 			}
 			if (Input.kd("D", "RIGHT")) {
-				if (player.GetLinearVelocity().x < MAX_VELOCITY) {
-					player.ApplyImpulse(new b2Vec2(HORIZONTAL_ACCEL, 0), player.GetWorldCenter());
+				if (player.getBody().GetLinearVelocity().x < MAX_VELOCITY) {
+					player.getBody().ApplyImpulse(new b2Vec2(HORIZONTAL_ACCEL, 0), player.getBody().GetWorldCenter());
 				}
 			}
 			
 			if (Input.kd("W", "UP")) {
 				// hack to make player wake up.... FIX LATER
-				player.SetLinearVelocity(new b2Vec2(player.GetLinearVelocity().x, -JUMP_STRENGTH));
+				player.getBody().SetLinearVelocity(new b2Vec2(player.getBody().GetLinearVelocity().x, -JUMP_STRENGTH));
 			}
 			
-			player.SetAwake(true);
-			player.SetActive(true);
+			player.getBody().SetAwake(true);
+			player.getBody().SetActive(true);
             world.Step(1/FRAME_RATE, CALCS_PER_TICK, CALCS_PER_TICK);
-			var pos_x:Number = player.GetWorldCenter().x*WORLD_SCALE;
-            var pos_y:Number = player.GetWorldCenter().y*WORLD_SCALE;
+			var pos_x:Number = player.getBody().GetWorldCenter().x*WORLD_SCALE;
+            var pos_y:Number = player.getBody().GetWorldCenter().y*WORLD_SCALE;
             x = stage.stageWidth/2-pos_x*scaleX;
             y = stage.stageHeight/2-pos_y*scaleY;
             world.ClearForces();
