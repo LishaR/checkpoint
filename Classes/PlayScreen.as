@@ -30,6 +30,7 @@
 		private static const PICKUP_DELAY:Number = 0.2; // min time after the checkpoint is thrown before it can be picked back up
 				
 		// global variables per level
+		private var checkpointLives:Number = 5;
 		private var world:b2World;
 		private var player:Player;
 		private var goal:b2Body;
@@ -51,7 +52,7 @@
 			scaleX = 1;
 			scaleY = 1;
 			
-			loadLevel(Levels.Level2);
+			loadLevel(Levels.Level1);
 			
 			debugDraw();		
 			
@@ -255,6 +256,8 @@
 			}
 			
 			if (checkpoint.getDead()) {
+				checkpointLives -= 1;
+				trace("Checkpoint lives: " + checkpointLives);
 				checkpoint.getBody().SetPosition(new b2Vec2(99999, 99999));
 				player.setCheckpointHeld(true);
 				checkpoint.setDead(false);
