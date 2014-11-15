@@ -26,6 +26,7 @@
 
 		public var playerSprite:Bitmap;
 		public var playerSpritesheet:Bitmap;
+		public var playerSpritesheetLeft:Bitmap;
 		public var playerFrame:BitmapData;
 		private var playerRect:Rectangle;
 
@@ -40,18 +41,22 @@
 		var animationDelay:int = 2;
 
 		private var myImageLoader:Loader;
+		private var myImageLoader2:Loader;
 		private var screen:MovieClip;
 
 
 		private var dead:Boolean;
 
+		private var orientation:Boolean;
+
 		public function loadSprite():void {
 
 			playerFrame=new BitmapData(32,64,true, 0x00000000);
+			
 			myImageLoader = new Loader();
 			//create a Loader instance
 			//create a URLRequest instance to indicate the image source
-			var myImageLocation:URLRequest = new URLRequest("assets/player_strip6.png");
+			var myImageLocation:URLRequest = new URLRequest("assets/player_left_strip6.png");
 			// load the bitmap data from the image source in the Loader instance
 			myImageLoader.load(myImageLocation);
 			// screen.addChild(myImageLoader);
@@ -59,9 +64,21 @@
 		}
 
 		public function addSprite(e:Event):void {
-			trace(myImageLoader.content);
+			myImageLoader2 = new Loader();
+			var myImageLocation:URLRequest = new URLRequest("assets/player_strip6.png");
+			myImageLoader2.load(myImageLocation);
+
+			myImageLoader2.contentLoaderInfo.addEventListener(Event.COMPLETE, addSprite2);
+			
 			var bmp:Bitmap = myImageLoader.content as Bitmap;
+			playerSpritesheetLeft = new Bitmap(bmp.bitmapData);
+			
+		}
+		public function addSprite2(e:Event):void {
+			trace(myImageLoader.content);
+			var bmp:Bitmap = myImageLoader2.content as Bitmap;
 			playerSpritesheet = new Bitmap(bmp.bitmapData);
+			
 			playerSprite = new Bitmap(playerFrame);
 			trace(playerSprite);
 			screen.addChild(playerSprite);
@@ -126,15 +143,25 @@
 
 		public function tick():void {
 			if (isLoaded) {
+				if (getBody().GetLinearVelocity().x > 0) {
+					orientation = true;
+				}
+				else if (getBody().GetLinearVelocity().x < 0) {
+					orientation = false;
+				}
+
 				if (Math.abs(getBody().GetLinearVelocity().x) > 1 &&  Math.abs(getBody().GetLinearVelocity().y) < 1 && canJump) {
-					drawSpriteWalking();
+					drawSpriteWalking(orientation);
 				} else if (canJump) {
-					drawSpriteIdle();
+					drawSpriteIdle(orientation);
 				}
 				else {
-					drawSpriteJumping();
+					drawSpriteJumping(orientation);
 				}
 				
+				if (getBody().GetLinearVelocity().x > 0) {
+
+				}
 				var pos:b2Vec2 = getBody().GetPosition();
 
 				playerSprite.x = pos.x*PlayScreen.WORLD_SCALE-16;
@@ -144,7 +171,7 @@
 			
 		}
 
-		private function drawSpriteWalking():void {
+		private function drawSpriteWalking(orientation:Boolean = true):void {
 			
 					if (animationCount == animationDelay) {
 						animationIndex++;
@@ -158,27 +185,45 @@
 				
 				playerRect.x = int(animationIndex)*tileWidth;
 				playerRect.y = 0;
-				playerFrame.copyPixels(playerSpritesheet.bitmapData,playerRect, new Point(0,0));
+				if (orientation) {
+					playerFrame.copyPixels(playerSpritesheet.bitmapData,playerRect, new Point(0,0));
+				}
+				else {
+					playerFrame.copyPixels(playerSpritesheetLeft.bitmapData,playerRect, new Point(0,0));
+				}
 		}
 
-		private function drawSpriteIdle():void {
+		private function drawSpriteIdle(orientation:Boolean = true):void {
 			
 				playerRect.x = 0;
 				playerRect.y = 0;
 				playerFrame.copyPixels(playerSpritesheet.bitmapData,playerRect, new Point(0,0));
+				if (orientation) {
+					playerFrame.copyPixels(playerSpritesheet.bitmapData,playerRect, new Point(0,0));
+				}
+				else {
+					playerFrame.copyPixels(playerSpritesheetLeft.bitmapData,playerRect, new Point(0,0));
+				}
 		}
 
-		private function drawSpriteJumping():void {
+		private function drawSpriteJumping(orientation:Boolean = true):void {
 			
 				playerRect.x = tileWidth;
 				playerRect.y = 0;
 				playerFrame.copyPixels(playerSpritesheet.bitmapData,playerRect, new Point(0,0));
+				if (orientation) {
+					playerFrame.copyPixels(playerSpritesheet.bitmapData,playerRect, new Point(0,0));
+				}
+				else {
+					playerFrame.copyPixels(playerSpritesheetLeft.bitmapData,playerRect, new Point(0,0));
+				}
 		}
 		
 		public function setDead(newDead:Boolean):void {
 			dead = newDead;
 
 		}
+
 	}
 	
 }
