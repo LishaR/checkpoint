@@ -227,7 +227,7 @@
 			for (var i:Number = x - w/2; i < x + w/2; i += sampleBitmap.width) {
 				var spike:Bitmap = new Bitmap(spikeData);
 				spike.x = i;
-				spike.y = y - spike.height*0.9;
+				spike.y = y - spike.height*0.65;
 				addChild(spike);
 			}
 		}

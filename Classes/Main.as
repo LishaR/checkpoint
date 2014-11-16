@@ -32,6 +32,8 @@
 			addChild(menuScreen);
 			currentScreen = menuScreen;
 			
+			Sound.play(Sound.MUSIC);
+			
 			menuScreen.addEventListener(NavigationEvent.ON_PRESS_MENU_PLAY, onPressPlayButton);
 		}
 		
