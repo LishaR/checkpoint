@@ -9,7 +9,6 @@
 	
     class ContactListener extends b2ContactListener {
 		public var checkpointBody:b2Body;
-		private const maxSpeed:Number = 10;
 		
 		public function ContactListener(newCheckpointBody:b2Body) {
 			checkpointBody = newCheckpointBody;
@@ -29,7 +28,10 @@
 					}
 					
 					if (fixtureB.GetBody().GetUserData().getEntityType() == "movingPlatform") {
-						fixtureB.GetBody().SetLinearVelocity(new b2Vec2(1, 1));
+						var world:b2World = fixtureB.GetBody().GetWorld();
+						world.DestroyBody(fixtureB.GetBody());
+						trace("deleted body");
+						//fixtureB.GetBody().SetLinearVelocity(new b2Vec2(0, 0));
 					}
 					
 					if (fixtureB.GetBody().GetUserData().getEntityType() == "platform") {
@@ -39,6 +41,7 @@
 						if (b2Math.Dot(normal, new b2Vec2(0,1)) > 0.9) {
 							playerBody.GetUserData().setCanJump(true);
 						}
+						
 					} else if (fixtureB.GetBody().GetUserData().getEntityType() == "lava") {
 						playerBody.GetUserData().setDead(true);
 					}

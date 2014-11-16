@@ -38,6 +38,9 @@
 		private var checkpoint:Checkpoint;
 		private var pickupTimer:Number; // used to make sure the player doesn't pick up the checkpoint like 0.03 seconds after he throws it.
 		
+		public function getWorld():b2World {
+			return world;
+		}
 		public function PlayScreen() {
 			addEventListener(Event.ADDED_TO_STAGE, onAddToStage);
 		}
@@ -101,14 +104,16 @@
 						bodyDef.type = b2Body.b2_staticBody;
 						var polyCoords:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
 						drawShape(polyCoords, 0x4f403a);
+					break;
 					
-					/*case "movingPlatform":
+					case "movingPlatform":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
-						bodyDef.type = b2Body.b2_kinematicBody;
+						bodyDef.type = b2Body.b2_staticBody;
 
 						var polyCoords:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
 						drawShape(polyCoords, 0x251e22);
-					*/	
+					break;
+					
 					default:
 						trace("Level object type not set");
 				}
@@ -153,9 +158,9 @@
 						body.SetUserData(new Entity("lava", body));
 					break;
 					
-					//case "movingPlatform":
-					//	body.SetUserData(new Entity("movingPlatform", body);
-					//break;
+					case "movingPlatform":
+						body.SetUserData(new Entity("movingPlatform", body));
+					break;
 					
 					case "spike":
 						body.SetUserData(new Entity("spike", body));
