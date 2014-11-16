@@ -42,7 +42,7 @@
 		private var pickupTimer:Number; // used to make sure the player doesn't pick up the checkpoint like 0.03 seconds after he throws it.
 		private var maxY:Number;
 		
-		private var currentLevel:String = Levels.Level6;
+		private var currentLevel:Number;
 		
 		public function getWorld():b2World {
 			return world;
@@ -61,8 +61,9 @@
 			Input.initialize(stage);
 			scaleX = 1;
 			scaleY = 1;
+			currentLevel = 0;
 			
-			loadLevel(currentLevel);
+			loadLevel(Levels.LEVEL_VECTOR[0]);
 			
 			//debugDraw();		
 			
@@ -109,18 +110,16 @@
 					case "spike":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
 						bodyDef.type = b2Body.b2_staticBody;
-						var polyCoords:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords, 0x4f403a);
-					break;
 						var polyCoords3:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
 						drawShape(polyCoords3, 0x4f403a);
+					break;
 					
 					case "movingPlatform":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
 						bodyDef.type = b2Body.b2_staticBody;
 
-						var polyCoords:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords, 0x251e22);
+						var polyCoords4:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
+						drawShape(polyCoords4, 0x251e22);
 					break;
 					
 					default:
@@ -152,6 +151,7 @@
 					
 					case "goal":
 						goal = body;
+						goal.SetUserData(new Entity("goal", goal));
 					break;
 					
 					case "bouncyCheckpoint":
@@ -327,7 +327,7 @@
 				while (numChildren > 0) {
 					removeChildAt(0);
 				}
-				loadLevel(currentLevel);
+				loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			} else if (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD) {
 				player.getBody().SetPosition(checkpoint.getBody().GetPosition());
 				player.setDead(false);
@@ -337,6 +337,16 @@
 				checkpoint.getBody().SetPosition(CHECKPOINT_OFFSCREEN);
 				player.setCheckpointHeld(true);
 				checkpoint.setDead(false);
+			}
+			
+			if (player.getInGoal()) {
+				if (currentLevel < Levels.LEVEL_VECTOR.length) {
+					while (numChildren > 0) {
+						removeChildAt(0);
+					}
+					currentLevel += 1;
+					loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
+				}
 			}
 			
 			player.getBody().SetAwake(true);

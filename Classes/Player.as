@@ -23,6 +23,8 @@
 		
 		private var checkpointHeld:Boolean;
 		private var canJump:Boolean;
+		private var inGoal:Boolean;
+		private var dead:Boolean;
 
 		public var playerSprite:Bitmap;
 		public var playerSpritesheet:Bitmap;
@@ -46,9 +48,6 @@
 		private var myImageLoader2:Loader;
 		private var flameLoader:Loader;
 		private var screen:MovieClip;
-
-
-		private var dead:Boolean;
 
 		private var orientation:Boolean = true;
 
@@ -136,12 +135,12 @@
 			
 			checkpointHeld = false;
 			canJump = true;
+			dead = false;
+			inGoal = false;
 
 			playerRect=new Rectangle(0,0,32,64);			
 
 			loadSprite();
-
-			dead = false;
 		}
 				
 		public function getCheckpointHeld():Boolean {
@@ -156,12 +155,24 @@
 			return dead;
 		}
 		
+		public function getInGoal():Boolean {
+			return inGoal;
+		}
+		
 		public function setCheckpointHeld(newCheckpointHeld:Boolean):void {
 			checkpointHeld = newCheckpointHeld;
 		}		
 		
 		public function setCanJump(newCanJump:Boolean):void {
 			canJump = newCanJump;
+		}
+		
+		public function setDead(newDead:Boolean):void {
+			dead = newDead;
+		}
+		
+		public function setInGoal(newInGoal:Boolean):void {
+			inGoal = newInGoal;
 		}
 
 		public function tick():void {
@@ -255,11 +266,6 @@
 				else {
 					playerFrame.copyPixels(playerSpritesheetLeft.bitmapData,playerRect, new Point(0,0));
 				}
-		}
-		
-		public function setDead(newDead:Boolean):void {
-			dead = newDead;
-
 		}
 
 	}
