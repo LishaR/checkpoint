@@ -401,6 +401,9 @@
 			if (!stage) return;
 			
 			pickupTimer -= 1/FRAME_RATE;
+			
+			Main.playOverlay.numCheckpoints.text = "" + checkpointLives;
+			
 			// collision detection
 			if (checkpoint != null) {
 				var dist:b2Vec2 = player.getBody().GetPosition().Copy();
@@ -499,8 +502,6 @@
 	            	movingPlatforms[i].tick();
 	            }
             }
-			
-			Main.playOverlay.numCheckpoints.text = "" + checkpointLives;
             
         }
 		

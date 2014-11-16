@@ -3,13 +3,13 @@
 	import flash.display.MovieClip;
 	import flash.events.Event;
 	import flash.events.TouchEvent;
-	import flash.text.TextField;
+	import fl.text.TLFTextField;
 	
 	public class PlayOverlay  extends MovieClip {
 
 		private var playScreen:PlayScreen;
 		
-		public var numCheckpoints:TextField;
+		public var numCheckpoints:TLFTextField;
 
 		public function PlayOverlay(ps:PlayScreen) {
 			playScreen = ps;
