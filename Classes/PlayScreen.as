@@ -29,6 +29,9 @@
 		private static const THROW_STRENGTH:Number = 15; // velocity the player throws the checkpoint
 		private static const THROW_START_DIST:Number = 1; // distance from the player the checkpoint spawns from when it is thrown
 		private static const PICKUP_DELAY:Number = 0.2; // min time after the checkpoint is thrown before it can be picked back up
+		private static const Y_THRESHOLD:Number = 15;
+		
+		private static const CHECKPOINT_OFFSCREEN:b2Vec2 = new b2Vec2(-99999, -99999);
 				
 		// global variables per level
 		private var checkpointLives:Number = 5;
@@ -37,6 +40,9 @@
 		private var goal:b2Body;
 		private var checkpoint:Checkpoint;
 		private var pickupTimer:Number; // used to make sure the player doesn't pick up the checkpoint like 0.03 seconds after he throws it.
+		private var maxY:Number;
+		
+		private var currentLevel:String = Levels.Level6;
 		
 		public function PlayScreen() {
 			addEventListener(Event.ADDED_TO_STAGE, onAddToStage);
@@ -53,7 +59,7 @@
 			scaleX = 1;
 			scaleY = 1;
 			
-			loadLevel(Levels.Level3);
+			loadLevel(currentLevel);
 			
 			//debugDraw();		
 			
@@ -68,6 +74,7 @@
 			goal = null;
 			checkpoint = null;
 			pickupTimer = 0;
+			maxY = -99999;
             var objects:Vector.<Object> = parse(levelData);
 			for each (var obj:Object in objects) {
 				
@@ -92,15 +99,15 @@
 					case "lava":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
 						bodyDef.type = b2Body.b2_staticBody;
-						var polyCoords:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords, 0x4f403a);
+						var polyCoords2:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
+						drawShape(polyCoords2, 0x4f403a);
 					break;
 					
 					case "spike":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
 						bodyDef.type = b2Body.b2_staticBody;
-						var polyCoords:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords, 0x4f403a);
+						var polyCoords3:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
+						drawShape(polyCoords3, 0x4f403a);
 					
 					/*case "movingPlatform":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
@@ -116,6 +123,9 @@
 				if (obj.type != "player" && obj.type != "checkpoint" && obj.type != "bouncyCheckpoint") {
 					// look at body y position to prevent it to be upside down
 					bodyDef.position.Set(obj.x/WORLD_SCALE, obj.y/WORLD_SCALE);
+					if (obj.y/WORLD_SCALE > maxY) {
+						maxY = obj.y/WORLD_SCALE;
+					}
 					
 					var fixtureDef:b2FixtureDef = new b2FixtureDef();
 					fixtureDef.shape = polygonShape;
@@ -171,6 +181,8 @@
 			if (checkpoint == null) {
 				trace("Warning: No checkpoint in level");
 			}
+			
+			trace(maxY);
 		}
 
 		// draws a shape of a particular color.
@@ -280,7 +292,7 @@
 					// LOLZ hack to make the checkpoint disappear without removing it
 					// There isn't an easy way to remove the checkpoint without totally destroying it
 					// and having to recreate it.  
-					checkpoint.getBody().SetPosition(new b2Vec2(99999, 99999));
+					checkpoint.getBody().SetPosition(CHECKPOINT_OFFSCREEN);
 				}
 			}
 			
@@ -303,15 +315,19 @@
 				player.setCanJump(false);
 			}
 			
-			if (player.getDead()) {
+			if ((player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD)
+				&& player.getCheckpointHeld()) {
+				while (numChildren > 0) {
+					removeChildAt(0);
+				}
+				loadLevel(currentLevel);
+			} else if (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD) {
 				player.getBody().SetPosition(checkpoint.getBody().GetPosition());
 				player.setDead(false);
-			}
-			
-			if (checkpoint.getDead()) {
+			} else if (checkpoint.getDead() || checkpoint.getBody().GetPosition().y > maxY + Y_THRESHOLD) {
 				checkpointLives -= 1;
 				trace("Checkpoint lives: " + checkpointLives);
-				checkpoint.getBody().SetPosition(new b2Vec2(99999, 99999));
+				checkpoint.getBody().SetPosition(CHECKPOINT_OFFSCREEN);
 				player.setCheckpointHeld(true);
 				checkpoint.setDead(false);
 			}

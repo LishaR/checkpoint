@@ -77,12 +77,10 @@
 			
 		}
 		public function addSprite2(e:Event):void {
-			trace(myImageLoader.content);
 			var bmp:Bitmap = myImageLoader2.content as Bitmap;
 			playerSpritesheet = new Bitmap(bmp.bitmapData);
 			
 			playerSprite = new Bitmap(playerFrame);
-			trace(playerSprite);
 			screen.addChild(playerSprite);
 
 			isLoaded = true;
@@ -172,7 +170,6 @@
 
 
 				playerSprite.x = pos.x*PlayScreen.WORLD_SCALE-tileWidth/2;
-				trace(playerH);
 				playerSprite.y = pos.y*PlayScreen.WORLD_SCALE+playerH/2- tileHeight + 2;
 
 			}
