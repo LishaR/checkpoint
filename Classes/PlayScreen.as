@@ -4,10 +4,13 @@
 	import flash.display.Sprite;
 	import flash.display.Graphics;
 	import flash.events.Event;
+	import flash.events.TransformGestureEvent;
 	import flash.events.MouseEvent;
     import flash.net.URLLoader;
     import flash.net.URLRequest;
     import flash.geom.Point;
+	import flash.ui.Multitouch;
+	import flash.ui.MultitouchInputMode;
 	
 	import Box2D.Dynamics.*;
     import Box2D.Collision.*;
@@ -37,9 +40,12 @@
 		private var checkpointLives:Number = 5;
 		private var world:b2World;
 		private var player:Player;
-		private var goal:b2Body;
+		private var goal:Goal;
 		private var checkpoint:Checkpoint;
 		private var pickupTimer:Number; // used to make sure the player doesn't pick up the checkpoint like 0.03 seconds after he throws it.
+
+		private var dir = 0;
+		
 		private var maxY:Number;
 		
 		private var currentLevel:Number;
@@ -66,12 +72,21 @@
 			scaleY = 1;
 			currentLevel = 0;
 			
+
+			Multitouch.inputMode = MultitouchInputMode.GESTURE;
+
+			stage.addEventListener(TransformGestureEvent.GESTURE_SWIPE , onSwipe);
+			
 			loadLevel(Levels.LEVEL_VECTOR[0]);
 			
 			// debugDraw();		
 			
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
-			stage.addEventListener(MouseEvent.CLICK, onMouseClick);
+			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
+			leftButton.addEventListener(MouseEvent.MOUSE_DOWN, onLeftButtonPress);
+			rightButton.addEventListener(MouseEvent.MOUSE_DOWN, onRightButtonPress);
+			jumpButton.addEventListener(MouseEvent.MOUSE_DOWN, onJumpButtonPress);
+			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 		}
 		
 		// Load one of the levels defined as static consts in Levels
@@ -89,16 +104,9 @@
 				var polygonShape:b2PolygonShape=new b2PolygonShape();		
 				
                	switch (obj.type) {
-					case "goal":
-						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); // temporarily a box
-						bodyDef.type = b2Body.b2_staticBody;
-						bodyDef.fixedRotation = true;
-					break;
-					
 					case "platform":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
 						bodyDef.type = b2Body.b2_staticBody;
-
 						var polyCoords:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
 						drawShape(polyCoords, 0x251e22);
 					break;
@@ -129,7 +137,8 @@
 						trace("Level object type not set");
 				}
 				
-				if (obj.type != "player" && obj.type != "checkpoint" && obj.type != "bouncyCheckpoint" && obj.type != "movingPlatform") {
+				if (obj.type != "player" && obj.type != "checkpoint" && obj.type != "bouncyCheckpoint" && obj.type != "goal" && obj.type != "movingPlatform") {
+
 					// look at body y position to prevent it to be upside down
 					bodyDef.position.Set(obj.x/WORLD_SCALE, obj.y/WORLD_SCALE);
 					if (obj.y/WORLD_SCALE > maxY) {
@@ -153,8 +162,7 @@
 					break;
 					
 					case "goal":
-						goal = body;
-						goal.SetUserData(new Entity("goal", goal));
+						goal = new Goal(world, obj);
 					break;
 					
 					case "bouncyCheckpoint":
@@ -261,7 +269,7 @@
         }
 		
 		// for now, mouse clicks throw the checkpoint when available.
-		private function onMouseClick(e:MouseEvent) {
+		private function onMouseDown(e:MouseEvent) {
 			var playerPos:b2Vec2 = player.getBody().GetWorldCenter();
 			var mousePosX:Number = e.stageX - x;
 			var mousePosY:Number = e.stageY - y;
@@ -269,6 +277,51 @@
 			var playerY:Number = playerPos.y*WORLD_SCALE;
 			
 			var dist:b2Vec2 = new b2Vec2(mousePosX - playerX, mousePosY - playerY);
+			dist.Normalize();
+			dist.Multiply(THROW_STRENGTH);
+			
+			var throwDist:b2Vec2 = dist.Copy();
+			throwDist.Normalize();
+			throwDist.Multiply(THROW_START_DIST);
+			
+			if (player.getCheckpointHeld()) {
+				var spawnPos:b2Vec2 = player.getBody().GetPosition().Copy();
+				spawnPos.Add(throwDist);
+				checkpoint.getBody().SetPosition(spawnPos);
+				
+				var vel:b2Vec2 = player.getBody().GetLinearVelocity().Copy();
+				vel.Add(dist);
+				checkpoint.getBody().SetLinearVelocity(vel);
+				
+				player.setCheckpointHeld(false);
+				pickupTimer = PICKUP_DELAY;
+			}
+		}
+		
+		private function onJumpButtonPress(e:MouseEvent) {
+			e.stopPropagation();
+			if (player.getCanJump()) {
+				player.getBody().SetLinearVelocity(new b2Vec2(player.getBody().GetLinearVelocity().x, -JUMP_STRENGTH));
+				player.setCanJump(false);
+			}
+		}
+		
+		private function onLeftButtonPress(e:MouseEvent) {
+			e.stopPropagation();
+			dir = -1;
+		}
+		
+		private function onRightButtonPress(e:MouseEvent) {
+			e.stopPropagation();
+			dir = 1;
+		}
+		
+		private function onMouseUp(e:MouseEvent) {
+			dir = 0;
+		}
+		
+		private function onSwipe(e:TransformGestureEvent) {
+			var dist:b2Vec2 = new b2Vec2(e.offsetX, e.offsetY);
 			dist.Normalize();
 			dist.Multiply(THROW_STRENGTH);
 			
@@ -300,27 +353,24 @@
 				if (dist.Length() < CHECKPOINT_PICKUP_DIST && pickupTimer < 0) {
 					player.setCheckpointHeld(true);
 					// LOLZ hack to make the checkpoint disappear without removing it
-					// There isn't an easy way to remove the checkpoint without totally destroying it
-					// and having to recreate it.  
 					checkpoint.getBody().SetPosition(CHECKPOINT_OFFSCREEN);
 				}
 			}
 			
 			// INPUT CLASS AND KEYCODES CLASS ARE TEMPORARY JUST FOR TESTING PURPOSES.  
 			// It's code I found on the internet because I'm gonna get rid of it soon anyway.
-			if (Input.kd("A", "LEFT")) {
+			if (Input.kd("A", "LEFT") || dir == -1) {
 				if (player.getBody().GetLinearVelocity().x > -MAX_VELOCITY) {
 					player.getBody().ApplyImpulse(new b2Vec2(-HORIZONTAL_ACCEL, 0), player.getBody().GetWorldCenter());
 				}
 			}
-			if (Input.kd("D", "RIGHT")) {
+			if (Input.kd("D", "RIGHT") || dir == 1) {
 				if (player.getBody().GetLinearVelocity().x < MAX_VELOCITY) {
 					player.getBody().ApplyImpulse(new b2Vec2(HORIZONTAL_ACCEL, 0), player.getBody().GetWorldCenter());
 				}
 			}
 			
-			if (Input.kd("W", "UP") && player.getCanJump()) {
-				// hack to make player wake up.... FIX LATER
+			if (Input.kd("W", "UP", "SPACE") && player.getCanJump()) {
 				player.getBody().SetLinearVelocity(new b2Vec2(player.getBody().GetLinearVelocity().x, -JUMP_STRENGTH));
 				player.setCanJump(false);
 			}
@@ -333,6 +383,10 @@
 					removeChildAt(0);
 				}
 				movingPlatforms = new Vector.<MovingPlatform>();
+
+				addChild(leftButton);
+				addChild(rightButton);
+				addChild(jumpButton);
 
 				loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			} else if (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD) {
@@ -351,6 +405,9 @@
 					while (numChildren > 0) {
 						removeChildAt(0);
 					}
+					addChild(leftButton);
+					addChild(rightButton);
+					addChild(jumpButton);
 					currentLevel += 1;
 					loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 				}
@@ -363,6 +420,12 @@
             var pos_y:Number = player.getBody().GetWorldCenter().y*WORLD_SCALE;
             x = stage.stageWidth/2-pos_x*scaleX;
             y = stage.stageHeight/2-pos_y*scaleY;
+			leftButton.x = -x;
+			leftButton.y = -y + stage.stageHeight - leftButton.height;
+			rightButton.x = -x + leftButton.width;
+			rightButton.y = -y + stage.stageHeight - rightButton.height;
+			jumpButton.x = -x + stage.stageWidth - jumpButton.width;
+			jumpButton.y = -y + stage.stageHeight - jumpButton.height;
             world.ClearForces();
             world.DrawDebugData();
 

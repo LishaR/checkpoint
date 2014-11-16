@@ -72,6 +72,7 @@
 		}
 
 		public function addSprite(e:Event):void {
+			trace("working");
 			myImageLoader2 = new Loader();
 			var myImageLocation:URLRequest = new URLRequest("assets/player_strip6.png");
 			myImageLoader2.load(myImageLocation);
