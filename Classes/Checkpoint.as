@@ -102,7 +102,7 @@
 				var pos:b2Vec2 = getBody().GetPosition();
 
 				checkpointSprite.x = pos.x*PlayScreen.WORLD_SCALE-16;
-				checkpointSprite.y = pos.y*PlayScreen.WORLD_SCALE-(32 + checkpointH)/2;
+				checkpointSprite.y = pos.y*PlayScreen.WORLD_SCALE-32 + checkpointH/2 + 1;
 
 			}
 			

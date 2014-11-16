@@ -32,7 +32,7 @@
 		private var isLoaded:Boolean = false;
 
 		var tileWidth:int = 32;
-		var tileHeight:int = 64;
+		var tileHeight:int = 48;
 		var walkAnimStart:int = 3;
 		var walkAnimEnd:int = 6;
 		var animationIndex:int = 3;
@@ -53,7 +53,7 @@
 
 		public function loadSprite():void {
 
-			playerFrame=new BitmapData(32,64,true, 0x00000000);
+			playerFrame=new BitmapData(32,48,true, 0x00000000);
 			
 			myImageLoader = new Loader();
 			//create a Loader instance
@@ -171,9 +171,9 @@
 
 
 
-				playerSprite.x = pos.x*PlayScreen.WORLD_SCALE-16;
+				playerSprite.x = pos.x*PlayScreen.WORLD_SCALE-tileWidth/2;
 				trace(playerH);
-				playerSprite.y = pos.y*PlayScreen.WORLD_SCALE-64+playerH;
+				playerSprite.y = pos.y*PlayScreen.WORLD_SCALE+playerH/2- tileHeight + 2;
 
 			}
 			
