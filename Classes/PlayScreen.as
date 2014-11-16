@@ -83,9 +83,6 @@
 			
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
-			leftButton.addEventListener(MouseEvent.MOUSE_DOWN, onLeftButtonPress);
-			rightButton.addEventListener(MouseEvent.MOUSE_DOWN, onRightButtonPress);
-			jumpButton.addEventListener(MouseEvent.MOUSE_DOWN, onJumpButtonPress);
 			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 		}
 		
@@ -115,24 +112,16 @@
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
 						bodyDef.type = b2Body.b2_staticBody;
 						var polyCoords2:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords2, 0x4f403a);
+						drawShape(polyCoords2, 0x486cd3);
 					break;
 					
 					case "spike":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
 						bodyDef.type = b2Body.b2_staticBody;
 						var polyCoords3:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords3, 0x4f403a);
+						drawShape(polyCoords3, 0x486cd3);
 					break;
-					/*
-					case "movingPlatform":
-						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
-						bodyDef.type = b2Body.b2_kinematicBody;
-
-						var polyCoords4:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords4, 0x251e22);
-					break;
-					*/
+					
 					default:
 						trace("Level object type not set");
 				}
@@ -162,7 +151,7 @@
 					break;
 					
 					case "goal":
-						goal = new Goal(world, obj);
+						goal = new Goal(world, obj, this);
 					break;
 					
 					case "bouncyCheckpoint":
@@ -298,7 +287,7 @@
 			}
 		}
 		
-		private function onJumpButtonPress(e:MouseEvent) {
+		public function onJumpButtonPress(e:MouseEvent) {
 			e.stopPropagation();
 			if (player.getCanJump()) {
 				player.getBody().SetLinearVelocity(new b2Vec2(player.getBody().GetLinearVelocity().x, -JUMP_STRENGTH));
@@ -306,12 +295,12 @@
 			}
 		}
 		
-		private function onLeftButtonPress(e:MouseEvent) {
+		public function onLeftButtonPress(e:MouseEvent) {
 			e.stopPropagation();
 			dir = -1;
 		}
 		
-		private function onRightButtonPress(e:MouseEvent) {
+		public function onRightButtonPress(e:MouseEvent) {
 			e.stopPropagation();
 			dir = 1;
 		}
@@ -382,11 +371,8 @@
 				while (numChildren > 0) {
 					removeChildAt(0);
 				}
-				movingPlatforms = new Vector.<MovingPlatform>();
 
-				addChild(leftButton);
-				addChild(rightButton);
-				addChild(jumpButton);
+				movingPlatforms = new Vector.<MovingPlatform>();
 
 				loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			} else if (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD) {
@@ -405,9 +391,6 @@
 					while (numChildren > 0) {
 						removeChildAt(0);
 					}
-					addChild(leftButton);
-					addChild(rightButton);
-					addChild(jumpButton);
 					currentLevel += 1;
 					loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 				}
@@ -420,17 +403,12 @@
             var pos_y:Number = player.getBody().GetWorldCenter().y*WORLD_SCALE;
             x = stage.stageWidth/2-pos_x*scaleX;
             y = stage.stageHeight/2-pos_y*scaleY;
-			leftButton.x = -x;
-			leftButton.y = -y + stage.stageHeight - leftButton.height;
-			rightButton.x = -x + leftButton.width;
-			rightButton.y = -y + stage.stageHeight - rightButton.height;
-			jumpButton.x = -x + stage.stageWidth - jumpButton.width;
-			jumpButton.y = -y + stage.stageHeight - jumpButton.height;
             world.ClearForces();
             world.DrawDebugData();
 
             player.tick();
             checkpoint.tick();
+            goal.tick();
 
             var i:int;
             for (i = 0; i < movingPlatforms.length; i++) {

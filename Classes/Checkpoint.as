@@ -63,26 +63,13 @@
 			body.CreateFixture(fixtureDef);
 			body.SetUserData(this);
 			
-			loadSprite();
+			addSprite();
 
 			dead = false;
 		}
 
-		public function loadSprite():void {
-
-			myImageLoader = new Loader();
-			//create a Loader instance
-			//create a URLRequest instance to indicate the image source
-			var myImageLocation:URLRequest = new URLRequest("assets/checkpoint.png");
-			// load the bitmap data from the image source in the Loader instance
-			myImageLoader.load(myImageLocation);
-			// screen.addChild(myImageLoader);
-			myImageLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, addSprite);
-		}
-
-		public function addSprite(e:Event):void {
-			var bmp:Bitmap = myImageLoader.content as Bitmap;
-			checkpointSprite = new Bitmap(bmp.bitmapData);
+		public function addSprite():void {
+			checkpointSprite = new Bitmap(new checkpoint());
 			screen.addChild(checkpointSprite);
 
 			isLoaded = true;
