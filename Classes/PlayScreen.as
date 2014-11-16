@@ -42,7 +42,7 @@
 		public static var currentLevel:Number;
 				
 		// global variables per level
-		private var checkpointLives:Number = 5;
+		private var checkpointLives:Number = 500;
 		private var world:b2World;
 		private var player:Player;
 		private var goal:Goal;
@@ -402,7 +402,7 @@
 			
 			pickupTimer -= 1/FRAME_RATE;
 			
-			Main.playOverlay.numCheckpoints.text = "" + checkpointLives;
+			//Main.playOverlay.numCheckpoints.text = "" + checkpointLives;
 			
 			// collision detection
 			if (checkpoint != null) {
