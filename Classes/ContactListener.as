@@ -28,12 +28,19 @@
 					
 					if (fixtureBType == "spike") {
 						playerBody.GetUserData().setDead(true);
-					} else if (fixtureBType == "movingPlatform") {
-						var world:b2World = fixtureB.GetBody().GetWorld();
-						world.DestroyBody(fixtureB.GetBody());
+					} 
+                    else if (fixtureBType == "movingPlatform") {
+						fixtureB.GetBody().SetLinearVelocity(new b2Vec2(0,2));
+                        var normal:b2Vec2 = contact.GetManifold().m_localPlaneNormal;
+
+                        // Allow player to jump if landing on platform from above
+                        if (b2Math.Dot(normal, new b2Vec2(0,1)) > 0.9) {
+                            playerBody.GetUserData().setCanJump(true);
+                        }
 						trace("deleted body");
 						//fixtureB.GetBody().SetLinearVelocity(new b2Vec2(0, 0));
-					} else if (fixtureBType == "platform") {
+					} 
+                    else if (fixtureBType == "platform") {
 						var normal:b2Vec2 = contact.GetManifold().m_localPlaneNormal;
 
 						// Allow player to jump if landing on platform from above
@@ -41,9 +48,11 @@
 							playerBody.GetUserData().setCanJump(true);
 						}
 						
-					} else if (fixtureBType == "lava") {
+					} 
+                    else if (fixtureBType == "lava") {
 						playerBody.GetUserData().setDead(true);
-					} else if (fixtureBType == "goal") {
+					} 
+                    else if (fixtureBType == "goal") {
 						playerBody.GetUserData().setInGoal(true);
 					}
 				} else if (fixtureAType == "checkpoint") {
