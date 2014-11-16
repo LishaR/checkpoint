@@ -115,24 +115,16 @@
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
 						bodyDef.type = b2Body.b2_staticBody;
 						var polyCoords2:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords2, 0x4f403a);
+						drawShape(polyCoords2, 0x486cd3);
 					break;
 					
 					case "spike":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
 						bodyDef.type = b2Body.b2_staticBody;
 						var polyCoords3:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords3, 0x4f403a);
+						drawShape(polyCoords3, 0x486cd3);
 					break;
-					/*
-					case "movingPlatform":
-						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
-						bodyDef.type = b2Body.b2_kinematicBody;
-
-						var polyCoords4:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords4, 0x251e22);
-					break;
-					*/
+					
 					default:
 						trace("Level object type not set");
 				}
@@ -162,7 +154,7 @@
 					break;
 					
 					case "goal":
-						goal = new Goal(world, obj);
+						goal = new Goal(world, obj, this);
 					break;
 					
 					case "bouncyCheckpoint":
@@ -431,6 +423,7 @@
 
             player.tick();
             checkpoint.tick();
+            goal.tick();
 
             var i:int;
             for (i = 0; i < movingPlatforms.length; i++) {
