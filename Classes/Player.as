@@ -49,6 +49,9 @@
 
 		private var orientation:Boolean;
 
+		private var playerW:int;
+		private var playerH:int;
+
 		public function loadSprite():void {
 
 			playerFrame=new BitmapData(32,64,true, 0x00000000);
@@ -93,6 +96,9 @@
 			
 			var bodyDef:b2BodyDef = new b2BodyDef();
 			var polygonShape:b2PolygonShape=new b2PolygonShape();		
+
+			playerW = obj.w/2/WORLD_SCALE;
+			playerH = obj.h/2/WORLD_SCALE;
 			
 			polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); // temporarily? a box
 			bodyDef.type = b2Body.b2_dynamicBody;
@@ -164,8 +170,10 @@
 				}
 				var pos:b2Vec2 = getBody().GetPosition();
 
+
+
 				playerSprite.x = pos.x*PlayScreen.WORLD_SCALE-16;
-				playerSprite.y = pos.y*PlayScreen.WORLD_SCALE-32;
+				playerSprite.y = pos.y*PlayScreen.WORLD_SCALE-(32-playerH/2);
 
 			}
 			
