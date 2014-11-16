@@ -123,10 +123,13 @@
 					break;
 					
 					default:
+						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
+						bodyDef.type = b2Body.b2_staticBody;
 						trace("Level object type not set");
+					break;
 				}
 				
-				if (obj.type != "player" && obj.type != "checkpoint" && obj.type != "bouncyCheckpoint" && obj.type != "goal" && obj.type != "movingPlatform") {
+				if (obj.type == "platform" || obj.type == "lava" || obj.type == "spike") {
 
 					// look at body y position to prevent it to be upside down
 					bodyDef.position.Set(obj.x/WORLD_SCALE, obj.y/WORLD_SCALE);
@@ -375,10 +378,10 @@
 				movingPlatforms = new Vector.<MovingPlatform>();
 
 				loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
-			} else if (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD) {
+			} else if (player && (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD)) {
 				player.getBody().SetPosition(checkpoint.getBody().GetPosition());
 				player.setDead(false);
-			} else if (checkpoint.getDead() || checkpoint.getBody().GetPosition().y > maxY + Y_THRESHOLD) {
+			} else if (checkpoint && (checkpoint.getDead() || checkpoint.getBody().GetPosition().y > maxY + Y_THRESHOLD)) {
 				checkpointLives -= 1;
 				trace("Checkpoint lives: " + checkpointLives);
 				checkpoint.getBody().SetPosition(CHECKPOINT_OFFSCREEN);
@@ -406,14 +409,25 @@
             world.ClearForces();
             world.DrawDebugData();
 
-            player.tick();
-            checkpoint.tick();
-            goal.tick();
-
-            var i:int;
-            for (i = 0; i < movingPlatforms.length; i++) {
-            	movingPlatforms[i].tick();
+            if (player) {
+            	player.tick();
             }
+            
+            if (checkpoint) {
+            	checkpoint.tick();
+            }
+            
+            if (goal) {
+            	goal.tick();
+            }
+            
+            if (movingPlatforms) {
+            	var i:int;
+	            for (i = 0; i < movingPlatforms.length; i++) {
+	            	movingPlatforms[i].tick();
+	            }
+            }
+            
         }
 		
 	}
