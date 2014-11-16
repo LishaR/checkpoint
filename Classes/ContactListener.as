@@ -13,6 +13,31 @@
 		public function ContactListener(newCheckpointBody:b2Body) {
 			checkpointBody = newCheckpointBody;
 		}
+
+        override public function PostSolve(contact:b2Contact, impulse:b2ContactImpulse):void {
+            var fixtureA:b2Fixture=contact.GetFixtureA();
+            var fixtureB:b2Fixture=contact.GetFixtureB();
+
+            if (fixtureA.GetBody().GetUserData() && fixtureB.GetBody().GetUserData()) {
+                var fixtureAType:String = fixtureA.GetBody().GetUserData().getEntityType();
+                var fixtureBType:String = fixtureB.GetBody().GetUserData().getEntityType();
+                
+                if (fixtureAType == "player") {
+                    var playerBody:b2Body = fixtureA.GetBody();
+                    
+                    if (fixtureBType == "spike") {
+                        playerBody.GetUserData().setDead(true);
+                    } 
+                    else if (fixtureBType == "lava") {
+                        playerBody.GetUserData().setDead(true);
+                    } 
+                    else if (fixtureBType == "goal") {
+                        playerBody.GetUserData().setInGoal(true);
+                    }
+                }
+            }
+            
+        }
 		
         override public function BeginContact(contact:b2Contact):void {
             // getting the fixtures that collided
@@ -41,10 +66,10 @@
 						//fixtureB.GetBody().SetLinearVelocity(new b2Vec2(0, 0));
 					} 
                     else if (fixtureBType == "platform") {
-						var normal:b2Vec2 = contact.GetManifold().m_localPlaneNormal;
+						var normal2:b2Vec2 = contact.GetManifold().m_localPlaneNormal;
 
 						// Allow player to jump if landing on platform from above
-						if (b2Math.Dot(normal, new b2Vec2(0,1)) > 0.9) {
+						if (b2Math.Dot(normal2, new b2Vec2(0,1)) > 0.9) {
 							playerBody.GetUserData().setCanJump(true);
 						}
 						
@@ -59,6 +84,9 @@
 					if (fixtureBType == "lava") {
 						checkpointBody.GetUserData().setDead(true);
 					}
+                    if (fixtureBType == "spikes") {
+                        checkpointBody.GetUserData().setDead(true);
+                    }
 				}
             }
         }
