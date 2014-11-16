@@ -38,6 +38,8 @@
 		private static const Y_THRESHOLD:Number = 15;
 		
 		private static const CHECKPOINT_OFFSCREEN:b2Vec2 = new b2Vec2(-99999, -99999);
+		
+		public static var currentLevel:Number;
 				
 		// global variables per level
 		private var checkpointLives:Number = 5;
@@ -50,17 +52,16 @@
 		private var dir = 0;
 		
 		private var maxY:Number;
-		
-		private var currentLevel:Number;
 
 		private var movingPlatforms:Vector.<MovingPlatform>;
 		
 		public function getWorld():b2World {
 			return world;
 		}
-		public function PlayScreen() {
+		public function PlayScreen(level:Number = 0) {
 			addEventListener(Event.ADDED_TO_STAGE, onAddToStage);
 			movingPlatforms = new Vector.<MovingPlatform>();
+			currentLevel = level;
 		}
 		
 		private function onAddToStage(e:Event) {
@@ -73,17 +74,31 @@
 			Input.initialize(stage);
 			scaleX = 1;
 			scaleY = 1;
+<<<<<<< HEAD
 			currentLevel = 0;
 			
 			loadLevel(Levels.LEVEL_VECTOR[0]);
+=======
+
+			Multitouch.inputMode = MultitouchInputMode.GESTURE;
+
+			stage.addEventListener(TransformGestureEvent.GESTURE_SWIPE , onSwipe);
+			
+			loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
+>>>>>>> 4a917118c7e7c01391e7391ffcde351f682fee2c
 			
 			// debugDraw();		
 			
 			Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
 			addEventListener(TouchEvent.TOUCH_TAP, onTap);
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
+			addEventListener(Event.REMOVED_FROM_STAGE, onRemoveFromStage);
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
 			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+		}
+		
+		private function onRemoveFromStage(e:Event):void {
+			removeEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 		
 		// Load one of the levels defined as static consts in Levels
@@ -122,10 +137,13 @@
 					break;
 					
 					default:
+						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
+						bodyDef.type = b2Body.b2_staticBody;
 						trace("Level object type not set");
+					break;
 				}
 				
-				if (obj.type != "player" && obj.type != "checkpoint" && obj.type != "bouncyCheckpoint" && obj.type != "goal" && obj.type != "movingPlatform") {
+				if (obj.type == "platform" || obj.type == "lava" || obj.type == "spike") {
 
 					// look at body y position to prevent it to be upside down
 					bodyDef.position.Set(obj.x/WORLD_SCALE, obj.y/WORLD_SCALE);
@@ -377,6 +395,8 @@
 		
 		// called every tick
         private function onEnterFrame(e:Event):void {
+			if (!stage) return;
+			
 			pickupTimer -= 1/FRAME_RATE;
 			// collision detection
 			if (checkpoint != null) {
@@ -417,13 +437,22 @@
 
 				movingPlatforms = new Vector.<MovingPlatform>();
 
+				checkpointLives -= 1;
+				if (checkpointLives < 0) {
+					dispatchEvent(new NavigationEvent(NavigationEvent.ON_GAME_OVER));
+				}
+				
 				loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
-			} else if (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD) {
+			} else if (player && (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD)) {
 				player.getBody().SetPosition(checkpoint.getBody().GetPosition());
 				player.setDead(false);
-			} else if (checkpoint.getDead() || checkpoint.getBody().GetPosition().y > maxY + Y_THRESHOLD) {
+			} else if (checkpoint && (checkpoint.getDead() || checkpoint.getBody().GetPosition().y > maxY + Y_THRESHOLD)) {
 				checkpointLives -= 1;
 				trace("Checkpoint lives: " + checkpointLives);
+				if (checkpointLives < 0) {
+					dispatchEvent(new NavigationEvent(NavigationEvent.ON_GAME_OVER));
+				}
+				
 				checkpoint.getBody().SetPosition(CHECKPOINT_OFFSCREEN);
 				player.setCheckpointHeld(true);
 				checkpoint.setDead(false);
@@ -444,19 +473,30 @@
             world.Step(1/FRAME_RATE, CALCS_PER_TICK, CALCS_PER_TICK);
 			var pos_x:Number = player.getBody().GetWorldCenter().x*WORLD_SCALE;
             var pos_y:Number = player.getBody().GetWorldCenter().y*WORLD_SCALE;
-            x = stage.stageWidth/2-pos_x*scaleX;
-            y = stage.stageHeight/2-pos_y*scaleY;
+            x = Main.stageWidth/2-pos_x*scaleX;
+            y = Main.stageHeight/2-pos_y*scaleY;
             world.ClearForces();
             world.DrawDebugData();
 
-            player.tick();
-            checkpoint.tick();
-            goal.tick();
-
-            var i:int;
-            for (i = 0; i < movingPlatforms.length; i++) {
-            	movingPlatforms[i].tick();
+            if (player) {
+            	player.tick();
             }
+            
+            if (checkpoint) {
+            	checkpoint.tick();
+            }
+            
+            if (goal) {
+            	goal.tick();
+            }
+            
+            if (movingPlatforms) {
+            	var i:int;
+	            for (i = 0; i < movingPlatforms.length; i++) {
+	            	movingPlatforms[i].tick();
+	            }
+            }
+            
         }
 		
 	}

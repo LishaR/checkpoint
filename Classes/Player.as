@@ -117,6 +117,7 @@
 			addSprite();
 			addSprite2();
 			addFlameSprite();
+
 		}
 				
 		public function getCheckpointHeld():Boolean {
