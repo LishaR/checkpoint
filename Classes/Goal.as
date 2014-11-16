@@ -60,19 +60,11 @@
 			body.CreateFixture(fixtureDef);
 			body.SetUserData(this);
 
-            myImageLoader = new Loader();
-            //create a Loader instance
-            //create a URLRequest instance to indicate the image source
-            var myImageLocation:URLRequest = new URLRequest("assets/goal.png");
-            // load the bitmap data from the image source in the Loader instance
-            myImageLoader.load(myImageLocation);
-            // screen.addChild(myImageLoader);
-            myImageLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, addSprite);
+            addSprite();
         }
 
-        public function addSprite(e:Event):void {
-            var bmp:Bitmap = myImageLoader.content as Bitmap;
-            goalSprite = new Bitmap(bmp.bitmapData);
+        public function addSprite():void {
+            goalSprite = new Bitmap(new goal());
             screen.addChild(goalSprite);
 
             isLoaded = true;

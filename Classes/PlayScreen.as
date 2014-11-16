@@ -11,12 +11,15 @@
     import flash.geom.Point;
 	import flash.ui.Multitouch;
 	import flash.ui.MultitouchInputMode;
+	import flash.events.TouchEvent;
 	
 	import Box2D.Dynamics.*;
     import Box2D.Collision.*;
     import Box2D.Collision.Shapes.*;
     import Box2D.Common.Math.*;
     import Box2D.Dynamics.Contacts.*;
+    import flash.display.Bitmap;
+    import flash.display.BitmapData;
 	
 	public class PlayScreen extends MovieClip {
 		
@@ -35,6 +38,8 @@
 		private static const Y_THRESHOLD:Number = 15;
 		
 		private static const CHECKPOINT_OFFSCREEN:b2Vec2 = new b2Vec2(-99999, -99999);
+		
+		public static var currentLevel:Number;
 				
 		// global variables per level
 		private var checkpointLives:Number = 5;
@@ -47,17 +52,16 @@
 		private var dir = 0;
 		
 		private var maxY:Number;
-		
-		private var currentLevel:Number;
 
 		private var movingPlatforms:Vector.<MovingPlatform>;
 		
 		public function getWorld():b2World {
 			return world;
 		}
-		public function PlayScreen() {
+		public function PlayScreen(level:Number = 0) {
 			addEventListener(Event.ADDED_TO_STAGE, onAddToStage);
 			movingPlatforms = new Vector.<MovingPlatform>();
+			currentLevel = level;
 		}
 		
 		private function onAddToStage(e:Event) {
@@ -70,20 +74,25 @@
 			Input.initialize(stage);
 			scaleX = 1;
 			scaleY = 1;
-			currentLevel = 0;
-			
 
 			Multitouch.inputMode = MultitouchInputMode.GESTURE;
 
 			stage.addEventListener(TransformGestureEvent.GESTURE_SWIPE , onSwipe);
 			
-			loadLevel(Levels.LEVEL_VECTOR[0]);
+			loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			
 			// debugDraw();		
 			
+			Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
+			addEventListener(TouchEvent.TOUCH_TAP, onTap);
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
+			addEventListener(Event.REMOVED_FROM_STAGE, onRemoveFromStage);
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
 			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+		}
+		
+		private function onRemoveFromStage(e:Event):void {
+			removeEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 		
 		// Load one of the levels defined as static consts in Levels
@@ -118,8 +127,7 @@
 					case "spike":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
 						bodyDef.type = b2Body.b2_staticBody;
-						var polyCoords3:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords3, 0x486cd3);
+						drawSpikes(obj.x, obj.y, obj.w, obj.h);
 					break;
 					
 					default:
@@ -221,6 +229,21 @@
 			addChild(platformImg);
 		}
 		
+		// draws a shape of a particular color.
+		// points is an array of points, with even indices as x coords, and odd as y coords
+		// color is the color
+		private function drawSpikes(x:Number, y:Number, w:Number, h:Number) {
+			// add graphics for a particular shape
+			var spikeData:BitmapData = new spikes() as BitmapData;
+			var sampleBitmap:Bitmap = new Bitmap(spikeData);
+			for (var i:Number = x - w/2; i < x + w/2; i += sampleBitmap.width) {
+				var spike:Bitmap = new Bitmap(spikeData);
+				spike.x = i;
+				spike.y = y - spike.height*0.65;
+				addChild(spike);
+			}
+		}
+		
 		// Parse the input into a vector(parametrized array) of Objects
 		// Implementation is NOT important to understand
 		private function parse(objData:String):Vector.<Object> {
@@ -259,6 +282,35 @@
             debugDraw.SetFillAlpha(0.5);
             world.SetDebugDraw(debugDraw);
         }
+		
+		private function onTap(e:TouchEvent): void {
+			var playerPos:b2Vec2 = player.getBody().GetWorldCenter();
+			var mousePosX:Number = e.stageX - x;
+			var mousePosY:Number = e.stageY - y;
+			var playerX:Number = playerPos.x*WORLD_SCALE;
+			var playerY:Number = playerPos.y*WORLD_SCALE;
+			
+			var dist:b2Vec2 = new b2Vec2(mousePosX - playerX, mousePosY - playerY);
+			dist.Normalize();
+			dist.Multiply(THROW_STRENGTH);
+			
+			var throwDist:b2Vec2 = dist.Copy();
+			throwDist.Normalize();
+			throwDist.Multiply(THROW_START_DIST);
+			
+			if (player.getCheckpointHeld()) {
+				var spawnPos:b2Vec2 = player.getBody().GetPosition().Copy();
+				spawnPos.Add(throwDist);
+				checkpoint.getBody().SetPosition(spawnPos);
+				
+				var vel:b2Vec2 = player.getBody().GetLinearVelocity().Copy();
+				vel.Add(dist);
+				checkpoint.getBody().SetLinearVelocity(vel);
+				
+				player.setCheckpointHeld(false);
+				pickupTimer = PICKUP_DELAY;
+			}
+		}
 		
 		// for now, mouse clicks throw the checkpoint when available.
 		private function onMouseDown(e:MouseEvent) {
@@ -337,6 +389,8 @@
 		
 		// called every tick
         private function onEnterFrame(e:Event):void {
+			if (!stage) return;
+			
 			pickupTimer -= 1/FRAME_RATE;
 			// collision detection
 			if (checkpoint != null) {
@@ -377,6 +431,11 @@
 
 				movingPlatforms = new Vector.<MovingPlatform>();
 
+				checkpointLives -= 1;
+				if (checkpointLives < 0) {
+					dispatchEvent(new NavigationEvent(NavigationEvent.ON_GAME_OVER));
+				}
+				
 				loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			} else if (player && (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD)) {
 				player.getBody().SetPosition(checkpoint.getBody().GetPosition());
@@ -384,6 +443,10 @@
 			} else if (checkpoint && (checkpoint.getDead() || checkpoint.getBody().GetPosition().y > maxY + Y_THRESHOLD)) {
 				checkpointLives -= 1;
 				trace("Checkpoint lives: " + checkpointLives);
+				if (checkpointLives < 0) {
+					dispatchEvent(new NavigationEvent(NavigationEvent.ON_GAME_OVER));
+				}
+				
 				checkpoint.getBody().SetPosition(CHECKPOINT_OFFSCREEN);
 				player.setCheckpointHeld(true);
 				checkpoint.setDead(false);
@@ -404,8 +467,8 @@
             world.Step(1/FRAME_RATE, CALCS_PER_TICK, CALCS_PER_TICK);
 			var pos_x:Number = player.getBody().GetWorldCenter().x*WORLD_SCALE;
             var pos_y:Number = player.getBody().GetWorldCenter().y*WORLD_SCALE;
-            x = stage.stageWidth/2-pos_x*scaleX;
-            y = stage.stageHeight/2-pos_y*scaleY;
+            x = Main.stageWidth/2-pos_x*scaleX;
+            y = Main.stageHeight/2-pos_y*scaleY;
             world.ClearForces();
             world.DrawDebugData();
 

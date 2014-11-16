@@ -50,13 +50,13 @@
 				
 				if (fixtureAType == "player") {
 					var playerBody:b2Body = fixtureA.GetBody();
-					
+					var normal:b2Vec2;
 					if (fixtureBType == "spike") {
 						playerBody.GetUserData().setDead(true);
 					} 
                     else if (fixtureBType == "movingPlatform") {
 						fixtureB.GetBody().SetLinearVelocity(new b2Vec2(0,2));
-                        var normal:b2Vec2 = contact.GetManifold().m_localPlaneNormal;
+                        normal = contact.GetManifold().m_localPlaneNormal;
 
                         // Allow player to jump if landing on platform from above
                         if (b2Math.Dot(normal, new b2Vec2(0,1)) > 0.9) {
@@ -66,10 +66,11 @@
 						//fixtureB.GetBody().SetLinearVelocity(new b2Vec2(0, 0));
 					} 
                     else if (fixtureBType == "platform") {
-						var normal2:b2Vec2 = contact.GetManifold().m_localPlaneNormal;
 
+						normal = contact.GetManifold().m_localPlaneNormal;
+						
 						// Allow player to jump if landing on platform from above
-						if (b2Math.Dot(normal2, new b2Vec2(0,1)) > 0.9) {
+						if (b2Math.Dot(normal, new b2Vec2(0,1)) > 0.9) {
 							playerBody.GetUserData().setCanJump(true);
 						}
 						
