@@ -55,9 +55,10 @@
 		public function getWorld():b2World {
 			return world;
 		}
-		public function PlayScreen() {
+		public function PlayScreen(level:Number = 0) {
 			addEventListener(Event.ADDED_TO_STAGE, onAddToStage);
 			movingPlatforms = new Vector.<MovingPlatform>();
+			currentLevel = level;
 		}
 		
 		private function onAddToStage(e:Event) {
@@ -70,8 +71,6 @@
 			Input.initialize(stage);
 			scaleX = 1;
 			scaleY = 1;
-			currentLevel = 0;
-			
 
 			Multitouch.inputMode = MultitouchInputMode.GESTURE;
 
@@ -377,6 +376,11 @@
 
 				movingPlatforms = new Vector.<MovingPlatform>();
 
+				checkpointLives -= 1;
+				if (checkpointLives < 0) {
+					dispatchEvent(new NavigationEvent(NavigationEvent.ON_GAME_OVER));
+				}
+				
 				loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			} else if (player && (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD)) {
 				player.getBody().SetPosition(checkpoint.getBody().GetPosition());
@@ -384,6 +388,10 @@
 			} else if (checkpoint && (checkpoint.getDead() || checkpoint.getBody().GetPosition().y > maxY + Y_THRESHOLD)) {
 				checkpointLives -= 1;
 				trace("Checkpoint lives: " + checkpointLives);
+				if (checkpointLives < 0) {
+					dispatchEvent(new NavigationEvent(NavigationEvent.ON_GAME_OVER));
+				}
+				
 				checkpoint.getBody().SetPosition(CHECKPOINT_OFFSCREEN);
 				player.setCheckpointHeld(true);
 				checkpoint.setDead(false);
