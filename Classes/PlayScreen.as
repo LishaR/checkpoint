@@ -96,6 +96,19 @@
 						drawShape(polyCoords, 0x4f403a);
 					break;
 					
+					case "spike":
+						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
+						bodyDef.type = b2Body.b2_staticBody;
+						var polyCoords:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
+						drawShape(polyCoords, 0x4f403a);
+					
+					/*case "movingPlatform":
+						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
+						bodyDef.type = b2Body.b2_kinematicBody;
+
+						var polyCoords:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
+						drawShape(polyCoords, 0x251e22);
+					*/	
 					default:
 						trace("Level object type not set");
 				}
@@ -138,6 +151,14 @@
 					
 					case "lava":
 						body.SetUserData(new Entity("lava", body));
+					break;
+					
+					//case "movingPlatform":
+					//	body.SetUserData(new Entity("movingPlatform", body);
+					//break;
+					
+					case "spike":
+						body.SetUserData(new Entity("spike", body));
 					break;
 				}
 			}
