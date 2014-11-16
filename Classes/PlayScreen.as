@@ -40,7 +40,7 @@
 		private var checkpointLives:Number = 5;
 		private var world:b2World;
 		private var player:Player;
-		private var goal:b2Body;
+		private var goal:Goal;
 		private var checkpoint:Checkpoint;
 		private var pickupTimer:Number; // used to make sure the player doesn't pick up the checkpoint like 0.03 seconds after he throws it.
 
@@ -100,12 +100,6 @@
 				var polygonShape:b2PolygonShape=new b2PolygonShape();		
 				
                	switch (obj.type) {
-					case "goal":
-						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); // temporarily a box
-						bodyDef.type = b2Body.b2_staticBody;
-						bodyDef.fixedRotation = true;
-					break;
-					
 					case "platform":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
 						bodyDef.type = b2Body.b2_staticBody;
@@ -139,7 +133,7 @@
 						trace("Level object type not set");
 				}
 				
-				if (obj.type != "player" && obj.type != "checkpoint" && obj.type != "bouncyCheckpoint") {
+				if (obj.type != "player" && obj.type != "checkpoint" && obj.type != "bouncyCheckpoint" && obj.type != "goal") {
 					// look at body y position to prevent it to be upside down
 					bodyDef.position.Set(obj.x/WORLD_SCALE, obj.y/WORLD_SCALE);
 					if (obj.y/WORLD_SCALE > maxY) {
@@ -163,8 +157,7 @@
 					break;
 					
 					case "goal":
-						goal = body;
-						goal.SetUserData(new Entity("goal", goal));
+						goal = new Goal(world, obj);
 					break;
 					
 					case "bouncyCheckpoint":

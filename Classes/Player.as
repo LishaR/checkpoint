@@ -49,7 +49,6 @@
 		private var flameLoader:Loader;
 		private var screen:MovieClip;
 
-		private var dead:Boolean;
 		private var orientation:Boolean = true;
 
 		private var playerW:int;
@@ -269,11 +268,6 @@
 					playerFrame.copyPixels(playerSpritesheetLeft.bitmapData,playerRect, new Point(0,0));
 				}
 		}
-		
-		public function setDead(newDead:Boolean):void {
-			dead = newDead;
-		}
-
 	}
 	
 }
