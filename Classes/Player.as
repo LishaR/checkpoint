@@ -44,9 +44,6 @@
 		var animationCount:int = 0;
 		var animationDelay:int = 2;
 
-		private var myImageLoader:Loader;
-		private var myImageLoader2:Loader;
-		private var flameLoader:Loader;
 		private var screen:MovieClip;
 
 		private var orientation:Boolean = true;
@@ -55,50 +52,25 @@
 		private var playerH:int;
 
 		public function loadSprite():void {
-
 			playerFrame=new BitmapData(32,48,true, 0x00000000);
-			
-			myImageLoader = new Loader();
-			flameLoader = new Loader();
-			//create a Loader instance
-			//create a URLRequest instance to indicate the image source
-			var myImageLocation:URLRequest = new URLRequest("assets/player_left_strip6.png");
-			// load the bitmap data from the image source in the Loader instance
-			myImageLoader.load(myImageLocation);
-			flameLoader.load(new URLRequest("assets/flame.png"));
-			// screen.addChild(myImageLoader);
-			myImageLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, addSprite);
-			flameLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, addFlameSprite);
 		}
 
-		public function addSprite(e:Event):void {
-			trace("working");
-			myImageLoader2 = new Loader();
-			var myImageLocation:URLRequest = new URLRequest("assets/player_strip6.png");
-			myImageLoader2.load(myImageLocation);
-
-			myImageLoader2.contentLoaderInfo.addEventListener(Event.COMPLETE, addSprite2);
-			
-			var bmp:Bitmap = myImageLoader.content as Bitmap;
-			playerSpritesheetLeft = new Bitmap(bmp.bitmapData);
+		public function addSprite():void {
+			playerSpritesheetLeft = new Bitmap(new player_left_strip6());
 			
 		}
 
-		public function addFlameSprite(e:Event): void {
-			var bmp:Bitmap = flameLoader.content as Bitmap;
-			
+		public function addFlameSprite(): void {
 			flameSprite = new Sprite();
-			flameSprite.addChild(bmp);
+			flameSprite.addChild(new Bitmap(new flame() as BitmapData));
 
 			screen.addChild(flameSprite);
 			flameSprite.visible = false;
 
 			flameLoaded = true;
-
 		}
-		public function addSprite2(e:Event):void {
-			var bmp:Bitmap = myImageLoader2.content as Bitmap;
-			playerSpritesheet = new Bitmap(bmp.bitmapData);
+		public function addSprite2():void {
+			playerSpritesheet = new Bitmap(new player_strip6());
 			
 			playerSprite = new Bitmap(playerFrame);
 			screen.addChild(playerSprite);
@@ -142,6 +114,9 @@
 			playerRect=new Rectangle(0,0,32,64);			
 
 			loadSprite();
+			addSprite();
+			addSprite2();
+			addFlameSprite();
 		}
 				
 		public function getCheckpointHeld():Boolean {
