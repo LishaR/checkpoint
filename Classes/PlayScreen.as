@@ -109,14 +109,11 @@
 					case "spike":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
 						bodyDef.type = b2Body.b2_staticBody;
-<<<<<<< HEAD
 						var polyCoords:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
 						drawShape(polyCoords, 0x4f403a);
 					break;
-=======
 						var polyCoords3:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
 						drawShape(polyCoords3, 0x4f403a);
->>>>>>> bfb745cb1dcc70c8db8076abe66241a23f1d9706
 					
 					case "movingPlatform":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
