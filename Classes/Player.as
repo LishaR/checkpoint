@@ -268,7 +268,7 @@
 					playerFrame.copyPixels(playerSpritesheetLeft.bitmapData,playerRect, new Point(0,0));
 				}
 		}
-	
+
 	}
 	
 }
