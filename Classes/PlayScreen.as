@@ -49,12 +49,15 @@
 		private var maxY:Number;
 		
 		private var currentLevel:Number;
+
+		private var movingPlatforms:Vector.<MovingPlatform>;
 		
 		public function getWorld():b2World {
 			return world;
 		}
 		public function PlayScreen() {
 			addEventListener(Event.ADDED_TO_STAGE, onAddToStage);
+			movingPlatforms = new Vector.<MovingPlatform>();
 		}
 		
 		private function onAddToStage(e:Event) {
@@ -76,7 +79,7 @@
 			
 			loadLevel(Levels.LEVEL_VECTOR[0]);
 			
-			//debugDraw();		
+			// debugDraw();		
 			
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
@@ -109,29 +112,22 @@
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
 						bodyDef.type = b2Body.b2_staticBody;
 						var polyCoords2:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords2, 0x4f403a);
+						drawShape(polyCoords2, 0x486cd3);
 					break;
 					
 					case "spike":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); 
 						bodyDef.type = b2Body.b2_staticBody;
 						var polyCoords3:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords3, 0x4f403a);
-					break;
-					
-					case "movingPlatform":
-						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
-						bodyDef.type = b2Body.b2_staticBody;
-
-						var polyCoords4:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
-						drawShape(polyCoords4, 0x251e22);
+						drawShape(polyCoords3, 0x486cd3);
 					break;
 					
 					default:
 						trace("Level object type not set");
 				}
 				
-				if (obj.type != "player" && obj.type != "checkpoint" && obj.type != "bouncyCheckpoint" && obj.type != "goal") {
+				if (obj.type != "player" && obj.type != "checkpoint" && obj.type != "bouncyCheckpoint" && obj.type != "goal" && obj.type != "movingPlatform") {
+
 					// look at body y position to prevent it to be upside down
 					bodyDef.position.Set(obj.x/WORLD_SCALE, obj.y/WORLD_SCALE);
 					if (obj.y/WORLD_SCALE > maxY) {
@@ -155,7 +151,7 @@
 					break;
 					
 					case "goal":
-						goal = new Goal(world, obj);
+						goal = new Goal(world, obj, this);
 					break;
 					
 					case "bouncyCheckpoint":
@@ -175,7 +171,7 @@
 					break;
 					
 					case "movingPlatform":
-						body.SetUserData(new Entity("movingPlatform", body));
+						movingPlatforms.push(new MovingPlatform(world, obj, this));
 					break;
 					
 					case "spike":
@@ -370,9 +366,14 @@
 			
 			if ((player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD)
 				&& player.getCheckpointHeld()) {
+
+				// kill everything
 				while (numChildren > 0) {
 					removeChildAt(0);
 				}
+
+				movingPlatforms = new Vector.<MovingPlatform>();
+
 				loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			} else if (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD) {
 				player.getBody().SetPosition(checkpoint.getBody().GetPosition());
@@ -407,6 +408,12 @@
 
             player.tick();
             checkpoint.tick();
+            goal.tick();
+
+            var i:int;
+            for (i = 0; i < movingPlatforms.length; i++) {
+            	movingPlatforms[i].tick();
+            }
         }
 		
 	}
