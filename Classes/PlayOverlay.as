@@ -2,7 +2,7 @@
 	
 	import flash.display.MovieClip;
 	import flash.events.Event;
-	import flash.events.MouseEvent;
+	import flash.events.TouchEvent;
 	
 	public class PlayOverlay  extends MovieClip {
 
@@ -16,9 +16,12 @@
 		private function onAddToStage(e:Event) {
 			removeEventListener(Event.ADDED_TO_STAGE, onAddToStage);
 			
-			leftButton.addEventListener(MouseEvent.MOUSE_DOWN, playScreen.onLeftButtonPress);
-			rightButton.addEventListener(MouseEvent.MOUSE_DOWN, playScreen.onRightButtonPress);
-			jumpButton.addEventListener(MouseEvent.MOUSE_DOWN, playScreen.onJumpButtonPress);
+			leftButton.addEventListener(TouchEvent.TOUCH_BEGIN, playScreen.onLeftButtonPress);
+			rightButton.addEventListener(TouchEvent.TOUCH_BEGIN, playScreen.onRightButtonPress);
+			jumpButton.addEventListener(TouchEvent.TOUCH_BEGIN, playScreen.onJumpButtonPress);
+			leftButton.addEventListener(TouchEvent.TOUCH_END, playScreen.onLeftButtonRelease);
+			rightButton.addEventListener(TouchEvent.TOUCH_END, playScreen.onRightButtonRelease);
+			addEventListener(TouchEvent.TOUCH_BEGIN, playScreen.onTap);
 			
 			leftButton.x = 0;
 			leftButton.y = stage.stageHeight - leftButton.height;
