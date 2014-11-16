@@ -9,6 +9,7 @@
 	
     class ContactListener extends b2ContactListener {
 		public var checkpointBody:b2Body;
+		private const maxSpeed:Number = 10;
 		
 		public function ContactListener(newCheckpointBody:b2Body) {
 			checkpointBody = newCheckpointBody;
@@ -22,6 +23,14 @@
             if (fixtureA.GetBody().GetUserData() && fixtureB.GetBody().GetUserData()) {
 				if (fixtureA.GetBody().GetUserData().getEntityType() == "player") {
 					var playerBody:b2Body = fixtureA.GetBody();
+					
+					if (fixtureB.GetBody().GetUserData().getEntityType() == "spike") {
+						playerBody.GetUserData().setDead(true);
+					}
+					
+					if (fixtureB.GetBody().GetUserData().getEntityType() == "movingPlatform") {
+						fixtureB.GetBody().SetLinearVelocity(new b2Vec2(1, 1));
+					}
 					
 					if (fixtureB.GetBody().GetUserData().getEntityType() == "platform") {
 						var normal:b2Vec2 = contact.GetManifold().m_localPlaneNormal;
