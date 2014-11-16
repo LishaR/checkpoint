@@ -1,5 +1,6 @@
 ﻿package  {
 	import flash.display.MovieClip;
+	import flash.display.Sprite;
 	
 	import Box2D.Dynamics.*;
     import Box2D.Collision.*;
@@ -28,10 +29,12 @@
 		public var playerSprite:Bitmap;
 		public var playerSpritesheet:Bitmap;
 		public var playerSpritesheetLeft:Bitmap;
+		public var flameSprite:Sprite;
 		public var playerFrame:BitmapData;
 		private var playerRect:Rectangle;
 
 		private var isLoaded:Boolean = false;
+		private var flameLoaded:Boolean = false;
 
 		var tileWidth:int = 32;
 		var tileHeight:int = 48;
@@ -43,6 +46,7 @@
 
 		private var myImageLoader:Loader;
 		private var myImageLoader2:Loader;
+		private var flameLoader:Loader;
 		private var screen:MovieClip;
 
 		private var orientation:Boolean = true;
@@ -55,13 +59,16 @@
 			playerFrame=new BitmapData(32,48,true, 0x00000000);
 			
 			myImageLoader = new Loader();
+			flameLoader = new Loader();
 			//create a Loader instance
 			//create a URLRequest instance to indicate the image source
 			var myImageLocation:URLRequest = new URLRequest("assets/player_left_strip6.png");
 			// load the bitmap data from the image source in the Loader instance
 			myImageLoader.load(myImageLocation);
+			flameLoader.load(new URLRequest("assets/flame.png"));
 			// screen.addChild(myImageLoader);
 			myImageLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, addSprite);
+			flameLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, addFlameSprite);
 		}
 
 		public function addSprite(e:Event):void {
@@ -74,6 +81,19 @@
 			var bmp:Bitmap = myImageLoader.content as Bitmap;
 			playerSpritesheetLeft = new Bitmap(bmp.bitmapData);
 			
+		}
+
+		public function addFlameSprite(e:Event): void {
+			var bmp:Bitmap = flameLoader.content as Bitmap;
+			
+			flameSprite = new Sprite();
+			flameSprite.addChild(bmp);
+
+			screen.addChild(flameSprite);
+			flameSprite.visible = false;
+
+			flameLoaded = true;
+
 		}
 		public function addSprite2(e:Event):void {
 			var bmp:Bitmap = myImageLoader2.content as Bitmap;
@@ -178,10 +198,23 @@
 				}
 				var pos:b2Vec2 = getBody().GetPosition();
 
+				if (flameLoaded) {
+					if (getCheckpointHeld()) {
+						flameSprite.visible = true;
+					}
+					else {
+						flameSprite.visible = false;
+					}
+					flameSprite.x = pos.x*PlayScreen.WORLD_SCALE-tileWidth/2;
+					flameSprite.y = pos.y*PlayScreen.WORLD_SCALE+playerH/2- tileHeight + 2 - 24;
 
 
+				}
+				
 				playerSprite.x = pos.x*PlayScreen.WORLD_SCALE-tileWidth/2;
 				playerSprite.y = pos.y*PlayScreen.WORLD_SCALE+playerH/2- tileHeight + 2;
+
+				
 
 			}
 			
