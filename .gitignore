@@ -1,3 +1,6 @@
 *.swf
 Checkpoint-app.xml
 RECOVER_Checkpoint.fla
+.project
+.actionScriptProperties
+.settings

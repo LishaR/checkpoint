@@ -44,7 +44,6 @@
 		private var myImageLoader2:Loader;
 		private var screen:MovieClip;
 
-
 		private var dead:Boolean;
 
 		private var orientation:Boolean;
@@ -67,6 +66,7 @@
 		}
 
 		public function addSprite(e:Event):void {
+			trace("working");
 			myImageLoader2 = new Loader();
 			var myImageLocation:URLRequest = new URLRequest("assets/player_strip6.png");
 			myImageLoader2.load(myImageLocation);
@@ -229,7 +229,6 @@
 		
 		public function setDead(newDead:Boolean):void {
 			dead = newDead;
-
 		}
 
 	}

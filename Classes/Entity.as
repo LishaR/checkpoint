@@ -16,6 +16,9 @@
 		public function getBody():b2Body {
 			return body;
 		}
+		
+		
+		
 	}
 	
 }

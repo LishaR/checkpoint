@@ -4,10 +4,13 @@
 	import flash.display.Sprite;
 	import flash.display.Graphics;
 	import flash.events.Event;
+	import flash.events.TransformGestureEvent;
 	import flash.events.MouseEvent;
     import flash.net.URLLoader;
     import flash.net.URLRequest;
     import flash.geom.Point;
+	import flash.ui.Multitouch;
+	import flash.ui.MultitouchInputMode;
 	
 	import Box2D.Dynamics.*;
     import Box2D.Collision.*;
@@ -37,6 +40,7 @@
 		private var goal:b2Body;
 		private var checkpoint:Checkpoint;
 		private var pickupTimer:Number; // used to make sure the player doesn't pick up the checkpoint like 0.03 seconds after he throws it.
+		private var dir = 0;
 		
 		public function PlayScreen() {
 			addEventListener(Event.ADDED_TO_STAGE, onAddToStage);
@@ -54,11 +58,17 @@
 			scaleY = 1;
 			
 			loadLevel(Levels.Level3);
+			Multitouch.inputMode = MultitouchInputMode.GESTURE;
+
+			stage.addEventListener(TransformGestureEvent.GESTURE_SWIPE , onSwipe);
 			
-			debugDraw();		
+			debugDraw();
 			
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
-			stage.addEventListener(MouseEvent.CLICK, onMouseClick);
+			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
+			leftButton.addEventListener(MouseEvent.MOUSE_DOWN, onLeftButtonPress);
+			rightButton.addEventListener(MouseEvent.MOUSE_DOWN, onRightButtonPress);
+			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 		}
 		
 		// Load one of the levels defined as static consts in Levels
@@ -84,7 +94,6 @@
 					case "platform":
 						polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE);
 						bodyDef.type = b2Body.b2_staticBody;
-
 						var polyCoords:Array = new Array(obj.x-obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y-obj.h/2, obj.x+obj.w/2, obj.y+obj.h/2, obj.x-obj.w/2, obj.y+obj.h/2);
 						drawShape(polyCoords, 0x251e22);
 					break;
@@ -218,14 +227,30 @@
         }
 		
 		// for now, mouse clicks throw the checkpoint when available.
-		private function onMouseClick(e:MouseEvent) {
-			var playerPos:b2Vec2 = player.getBody().GetWorldCenter();
-			var mousePosX:Number = e.stageX - x;
-			var mousePosY:Number = e.stageY - y;
-			var playerX:Number = playerPos.x*WORLD_SCALE;
-			var playerY:Number = playerPos.y*WORLD_SCALE;
-			
-			var dist:b2Vec2 = new b2Vec2(mousePosX - playerX, mousePosY - playerY);
+		private function onMouseDown(e:MouseEvent) {
+			// hack to make player wake up.... FIX LATER
+			if (player.getCanJump()) {
+				player.getBody().SetLinearVelocity(new b2Vec2(player.getBody().GetLinearVelocity().x, -JUMP_STRENGTH));
+				player.setCanJump(false);
+			}
+		}
+		
+		private function onLeftButtonPress(e:MouseEvent) {
+			e.stopPropagation();
+			dir = -1;
+		}
+		
+		private function onRightButtonPress(e:MouseEvent) {
+			e.stopPropagation();
+			dir = 1;
+		}
+		
+		private function onMouseUp(e:MouseEvent) {
+			dir = 0;
+		}
+		
+		private function onSwipe(e:TransformGestureEvent) {
+			var dist:b2Vec2 = new b2Vec2(e.offsetX, e.offsetY);
 			dist.Normalize();
 			dist.Multiply(THROW_STRENGTH);
 			
@@ -265,12 +290,12 @@
 			
 			// INPUT CLASS AND KEYCODES CLASS ARE TEMPORARY JUST FOR TESTING PURPOSES.  
 			// It's code I found on the internet because I'm gonna get rid of it soon anyway.
-			if (Input.kd("A", "LEFT")) {
+			if (Input.kd("A", "LEFT") || dir == -1) {
 				if (player.getBody().GetLinearVelocity().x > -MAX_VELOCITY) {
 					player.getBody().ApplyImpulse(new b2Vec2(-HORIZONTAL_ACCEL, 0), player.getBody().GetWorldCenter());
 				}
 			}
-			if (Input.kd("D", "RIGHT")) {
+			if (Input.kd("D", "RIGHT") || dir == 1) {
 				if (player.getBody().GetLinearVelocity().x < MAX_VELOCITY) {
 					player.getBody().ApplyImpulse(new b2Vec2(HORIZONTAL_ACCEL, 0), player.getBody().GetWorldCenter());
 				}
@@ -289,7 +314,6 @@
 			
 			if (checkpoint.getDead()) {
 				checkpointLives -= 1;
-				trace("Checkpoint lives: " + checkpointLives);
 				checkpoint.getBody().SetPosition(new b2Vec2(99999, 99999));
 				player.setCheckpointHeld(true);
 				checkpoint.setDead(false);
@@ -302,6 +326,10 @@
             var pos_y:Number = player.getBody().GetWorldCenter().y*WORLD_SCALE;
             x = stage.stageWidth/2-pos_x*scaleX;
             y = stage.stageHeight/2-pos_y*scaleY;
+			leftButton.x = -x + 50;
+			leftButton.y = -y + stage.stageHeight - 100;
+			rightButton.x = -x + 200;
+			rightButton.y = -y + stage.stageHeight - 100;
             world.ClearForces();
             world.DrawDebugData();
 
