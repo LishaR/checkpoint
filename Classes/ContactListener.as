@@ -66,14 +66,11 @@
 						//fixtureB.GetBody().SetLinearVelocity(new b2Vec2(0, 0));
 					} 
                     else if (fixtureBType == "platform") {
-<<<<<<< HEAD
-						normal = contact.GetManifold().m_localPlaneNormal;
-=======
-						var normal2:b2Vec2 = contact.GetManifold().m_localPlaneNormal;
->>>>>>> 4a917118c7e7c01391e7391ffcde351f682fee2c
 
+						normal = contact.GetManifold().m_localPlaneNormal;
+						
 						// Allow player to jump if landing on platform from above
-						if (b2Math.Dot(normal2, new b2Vec2(0,1)) > 0.9) {
+						if (b2Math.Dot(normal, new b2Vec2(0,1)) > 0.9) {
 							playerBody.GetUserData().setCanJump(true);
 						}
 						

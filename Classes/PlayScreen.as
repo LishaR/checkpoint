@@ -74,18 +74,12 @@
 			Input.initialize(stage);
 			scaleX = 1;
 			scaleY = 1;
-<<<<<<< HEAD
-			currentLevel = 0;
-			
-			loadLevel(Levels.LEVEL_VECTOR[0]);
-=======
 
 			Multitouch.inputMode = MultitouchInputMode.GESTURE;
 
 			stage.addEventListener(TransformGestureEvent.GESTURE_SWIPE , onSwipe);
 			
 			loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
->>>>>>> 4a917118c7e7c01391e7391ffcde351f682fee2c
 			
 			// debugDraw();		
 			
