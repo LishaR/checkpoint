@@ -24,7 +24,6 @@
 			jumpButton.addEventListener(TouchEvent.TOUCH_BEGIN, playScreen.onJumpButtonPress);
 			leftButton.addEventListener(TouchEvent.TOUCH_END, playScreen.onLeftButtonRelease);
 			rightButton.addEventListener(TouchEvent.TOUCH_END, playScreen.onRightButtonRelease);
-			addEventListener(TouchEvent.TOUCH_BEGIN, playScreen.onTap);
 			
 			leftButton.x = 0;
 			leftButton.y = stage.stageHeight - leftButton.height;

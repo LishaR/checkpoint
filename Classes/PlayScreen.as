@@ -84,6 +84,7 @@
 			
 			Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
 			
+			stage.addEventListener(TouchEvent.TOUCH_BEGIN, onTap);
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
 			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 		}
@@ -281,12 +282,16 @@
         }
 		
 		public function onTap(e:TouchEvent): void {
+			if (e.stageY > Main.stageHeight*0.7) {
+				return;
+			}
+			
 			var playerPos:b2Vec2 = player.getBody().GetWorldCenter();
 			var mousePosX:Number = e.stageX - x;
 			var mousePosY:Number = e.stageY - y;
 			var playerX:Number = playerPos.x*WORLD_SCALE;
 			var playerY:Number = playerPos.y*WORLD_SCALE;
-			
+		
 			var dist:b2Vec2 = new b2Vec2(mousePosX - playerX, mousePosY - playerY);
 			dist.Normalize();
 			dist.Multiply(THROW_STRENGTH);
@@ -294,6 +299,7 @@
 			var throwDist:b2Vec2 = dist.Copy();
 			throwDist.Normalize();
 			throwDist.Multiply(THROW_START_DIST);
+			
 			
 			if (player.getCheckpointHeld()) {
 				var spawnPos:b2Vec2 = player.getBody().GetPosition().Copy();
@@ -311,6 +317,10 @@
 		
 		// for now, mouse clicks throw the checkpoint when available.
 		private function onMouseDown(e:MouseEvent) {
+			if (e.stageY > Main.stageHeight*0.7) {
+				return;
+			}
+			
 			var playerPos:b2Vec2 = player.getBody().GetWorldCenter();
 			var mousePosX:Number = e.stageX - x;
 			var mousePosY:Number = e.stageY - y;
@@ -371,29 +381,6 @@
 		
 		private function onMouseUp(e:MouseEvent) {
 			dir = 0;
-		}
-		
-		private function onSwipe(e:TransformGestureEvent) {
-			var dist:b2Vec2 = new b2Vec2(e.offsetX, e.offsetY);
-			dist.Normalize();
-			dist.Multiply(THROW_STRENGTH);
-			
-			var throwDist:b2Vec2 = dist.Copy();
-			throwDist.Normalize();
-			throwDist.Multiply(THROW_START_DIST);
-			
-			if (player.getCheckpointHeld()) {
-				var spawnPos:b2Vec2 = player.getBody().GetPosition().Copy();
-				spawnPos.Add(throwDist);
-				checkpoint.getBody().SetPosition(spawnPos);
-				
-				var vel:b2Vec2 = player.getBody().GetLinearVelocity().Copy();
-				vel.Add(dist);
-				checkpoint.getBody().SetLinearVelocity(vel);
-				
-				player.setCheckpointHeld(false);
-				pickupTimer = PICKUP_DELAY;
-			}
 		}
 		
 		// called every tick

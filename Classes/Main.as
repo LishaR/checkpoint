@@ -40,7 +40,7 @@
 		}
 		
 		private function onPressPlayButton(e:Event):void {
-			removeEventListener(NavigationEvent.ON_PRESS_MENU_PLAY, onPressPlayButton);
+			menuScreen.removeEventListener(NavigationEvent.ON_PRESS_MENU_PLAY, onPressPlayButton);
 			
 			instructionsScreen = new InstructionsScreen();
 			instructionsScreen.addEventListener(NavigationEvent.ON_PRESS_START, onPressStartButton);
@@ -51,7 +51,7 @@
 		}
 		
 		private function onPressStartButton(e:Event):void {
-			removeEventListener(NavigationEvent.ON_PRESS_START, onPressStartButton);
+			instructionsScreen.removeEventListener(NavigationEvent.ON_PRESS_START, onPressStartButton);
 			
 			playScreen = new PlayScreen();
 			playOverlay = new PlayOverlay(playScreen);
@@ -64,7 +64,7 @@
 		}
 		
 		private function onGameOver(e:Event):void {
-			removeEventListener(NavigationEvent.ON_GAME_OVER, onGameOver);
+			playScreen.removeEventListener(NavigationEvent.ON_GAME_OVER, onGameOver);
 			
 			gameOverScreen = new GameOverScreen();
 			gameOverScreen.addEventListener(NavigationEvent.ON_PRESS_START_OVER, onPressStartOver);
@@ -76,9 +76,10 @@
 		}
 		
 		private function onPressStartOver(e:Event):void {
-			removeEventListener(NavigationEvent.ON_PRESS_START_OVER, onPressStartOver);
+			gameOverScreen.removeEventListener(NavigationEvent.ON_PRESS_START_OVER, onPressStartOver);
 			
 			playScreen = new PlayScreen(PlayScreen.currentLevel);
+			playOverlay = new PlayOverlay(playScreen);
 			playScreen.addEventListener(NavigationEvent.ON_GAME_OVER, onGameOver);
 			
 			removeChild(currentScreen);
