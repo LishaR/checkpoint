@@ -75,8 +75,6 @@
 			scaleX = 1;
 			scaleY = 1;
 
-			//stage.addEventListener(TransformGestureEvent.GESTURE_SWIPE , onSwipe);
-			
 			loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			
 			// debugDraw();		
@@ -501,6 +499,8 @@
 	            	movingPlatforms[i].tick();
 	            }
             }
+			
+			Main.playOverlay.numCheckpoints.text = "" + checkpointLives;
             
         }
 		
