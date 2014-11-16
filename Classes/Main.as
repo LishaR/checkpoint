@@ -9,6 +9,7 @@
 		
 		public static var menuScreen:MenuScreen;
 		public static var playScreen:PlayScreen;
+		public static var playOverlay:PlayOverlay;
 		
 		public static var stageWidth:Number;
 		public static var stageHeight:Number;
@@ -38,10 +39,12 @@
 			removeEventListener(NavigationEvent.ON_PRESS_MENU_PLAY, onPressPlayButton);
 			
 			playScreen = new PlayScreen();
+			playOverlay = new PlayOverlay(playScreen);
 			
 			removeChild(currentScreen);
 			currentScreen = playScreen;
 			addChild(playScreen);
+			addChild(playOverlay);
 		}
 
 	}

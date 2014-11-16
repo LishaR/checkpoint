@@ -80,9 +80,6 @@
 			
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
-			leftButton.addEventListener(MouseEvent.MOUSE_DOWN, onLeftButtonPress);
-			rightButton.addEventListener(MouseEvent.MOUSE_DOWN, onRightButtonPress);
-			jumpButton.addEventListener(MouseEvent.MOUSE_DOWN, onJumpButtonPress);
 			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 		}
 		
@@ -294,7 +291,7 @@
 			}
 		}
 		
-		private function onJumpButtonPress(e:MouseEvent) {
+		public function onJumpButtonPress(e:MouseEvent) {
 			e.stopPropagation();
 			if (player.getCanJump()) {
 				player.getBody().SetLinearVelocity(new b2Vec2(player.getBody().GetLinearVelocity().x, -JUMP_STRENGTH));
@@ -302,12 +299,12 @@
 			}
 		}
 		
-		private function onLeftButtonPress(e:MouseEvent) {
+		public function onLeftButtonPress(e:MouseEvent) {
 			e.stopPropagation();
 			dir = -1;
 		}
 		
-		private function onRightButtonPress(e:MouseEvent) {
+		public function onRightButtonPress(e:MouseEvent) {
 			e.stopPropagation();
 			dir = 1;
 		}
@@ -376,9 +373,6 @@
 				while (numChildren > 0) {
 					removeChildAt(0);
 				}
-				addChild(leftButton);
-				addChild(rightButton);
-				addChild(jumpButton);
 				loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			} else if (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD) {
 				player.getBody().SetPosition(checkpoint.getBody().GetPosition());
@@ -396,9 +390,6 @@
 					while (numChildren > 0) {
 						removeChildAt(0);
 					}
-					addChild(leftButton);
-					addChild(rightButton);
-					addChild(jumpButton);
 					currentLevel += 1;
 					loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 				}
@@ -411,12 +402,6 @@
             var pos_y:Number = player.getBody().GetWorldCenter().y*WORLD_SCALE;
             x = stage.stageWidth/2-pos_x*scaleX;
             y = stage.stageHeight/2-pos_y*scaleY;
-			leftButton.x = -x;
-			leftButton.y = -y + stage.stageHeight - leftButton.height;
-			rightButton.x = -x + leftButton.width;
-			rightButton.y = -y + stage.stageHeight - rightButton.height;
-			jumpButton.x = -x + stage.stageWidth - jumpButton.width;
-			jumpButton.y = -y + stage.stageHeight - jumpButton.height;
             world.ClearForces();
             world.DrawDebugData();
 
