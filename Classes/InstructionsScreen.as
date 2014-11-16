@@ -1,11 +1,11 @@
 ﻿package  {
-	
+		
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.display.MovieClip;
-	
+		
 	public class InstructionsScreen extends MovieClip {
-
+		
 		public function InstructionsScreen() {
 			addEventListener(Event.ADDED_TO_STAGE, onAddToStage);
 		}

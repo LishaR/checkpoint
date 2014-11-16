@@ -75,18 +75,17 @@
 			scaleX = 1;
 			scaleY = 1;
 
-			Multitouch.inputMode = MultitouchInputMode.GESTURE;
-
-			stage.addEventListener(TransformGestureEvent.GESTURE_SWIPE , onSwipe);
+			//stage.addEventListener(TransformGestureEvent.GESTURE_SWIPE , onSwipe);
 			
 			loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			
 			// debugDraw();		
 			
-			Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
-			addEventListener(TouchEvent.TOUCH_TAP, onTap);
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
 			addEventListener(Event.REMOVED_FROM_STAGE, onRemoveFromStage);
+			
+			Multitouch.inputMode = MultitouchInputMode.TOUCH_POINT;
+			
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
 			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 		}
@@ -283,7 +282,7 @@
             world.SetDebugDraw(debugDraw);
         }
 		
-		private function onTap(e:TouchEvent): void {
+		public function onTap(e:TouchEvent): void {
 			var playerPos:b2Vec2 = player.getBody().GetWorldCenter();
 			var mousePosX:Number = e.stageX - x;
 			var mousePosY:Number = e.stageY - y;
@@ -342,7 +341,7 @@
 			}
 		}
 		
-		public function onJumpButtonPress(e:MouseEvent) {
+		public function onJumpButtonPress(e:TouchEvent) {
 			e.stopPropagation();
 			if (player.getCanJump()) {
 				player.getBody().SetLinearVelocity(new b2Vec2(player.getBody().GetLinearVelocity().x, -JUMP_STRENGTH));
@@ -350,14 +349,26 @@
 			}
 		}
 		
-		public function onLeftButtonPress(e:MouseEvent) {
+		public function onLeftButtonPress(e:TouchEvent) {
 			e.stopPropagation();
 			dir = -1;
 		}
 		
-		public function onRightButtonPress(e:MouseEvent) {
+		public function onRightButtonPress(e:TouchEvent) {
 			e.stopPropagation();
 			dir = 1;
+		}
+		
+		public function onLeftButtonRelease(e:TouchEvent) {
+			if (dir == -1) {
+				dir = 0;
+			}
+		}
+		
+		public function onRightButtonRelease(e:TouchEvent) {
+			if (dir == 1) {
+				dir = 0;
+			}
 		}
 		
 		private function onMouseUp(e:MouseEvent) {
