@@ -1,28 +1,57 @@
 ﻿package  {
+	import flash.display.MovieClip;
+
 	import Box2D.Dynamics.*;
     import Box2D.Collision.*;
     import Box2D.Collision.Shapes.*;
     import Box2D.Common.Math.*;
     import Box2D.Dynamics.Contacts.*;
+
+    import flash.display.Loader;
+    import flash.net.URLRequest;
+    import flash.events.Event;
+
+    import flash.display.Bitmap;
+    import flash.display.BitmapData;
+    import flash.geom.Rectangle;
+    import flash.geom.Point;
 	
+
 	public class Checkpoint extends Entity {
 		private static const CHECKPOINT_RESTIT:Number = 0.1; // checkpoint bounciness on a 0 to 1 scale
 		private static const CHECKPOINT_FRICTION:Number = 0.3; // checkpoint friction
-		private static const WORLD_SCALE:Number = 20; // pixels per meter
 		
 		private var dead:Boolean;
+		private var isLoaded:Boolean = false;
 		
-		public function Checkpoint(world:b2World, obj:Object) {
+		private var screen:MovieClip;
+		private var myImageLoader:Loader;
+
+
+		public var checkpointSprite:Bitmap;
+		public var checkpointFrame:BitmapData;
+		
+			
+		private var checkpointW:int;
+		private var checkpointH:int;
+			
+		public function Checkpoint(world:b2World, obj:Object, playScreen:MovieClip) {
 			super("checkpoint");
+			screen = playScreen;
+			
 			
 			var bodyDef:b2BodyDef = new b2BodyDef();
-			var polygonShape:b2PolygonShape=new b2PolygonShape();		
+			var polygonShape:b2PolygonShape=new b2PolygonShape();	
+
+			checkpointW = obj.w;
+			checkpointH = obj.h;
+				
 			
-			polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); // temporarily? a box
+			polygonShape.SetAsBox(obj.w/2/PlayScreen.WORLD_SCALE, obj.h/2/PlayScreen.WORLD_SCALE); // temporarily? a box
 			bodyDef.type = b2Body.b2_dynamicBody;
 			
 			// look at body y position to prevent it to be upside down
-			bodyDef.position.Set(obj.x/WORLD_SCALE, obj.y/WORLD_SCALE);
+			bodyDef.position.Set(obj.x/PlayScreen.WORLD_SCALE, obj.y/PlayScreen.WORLD_SCALE);
 			
 			var fixtureDef:b2FixtureDef = new b2FixtureDef();
 			fixtureDef.shape = polygonShape;
@@ -34,7 +63,29 @@
 			body.CreateFixture(fixtureDef);
 			body.SetUserData(this);
 			
+			loadSprite();
+
 			dead = false;
+		}
+
+		public function loadSprite():void {
+
+			myImageLoader = new Loader();
+			//create a Loader instance
+			//create a URLRequest instance to indicate the image source
+			var myImageLocation:URLRequest = new URLRequest("assets/checkpoint.png");
+			// load the bitmap data from the image source in the Loader instance
+			myImageLoader.load(myImageLocation);
+			// screen.addChild(myImageLoader);
+			myImageLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, addSprite);
+		}
+
+		public function addSprite(e:Event):void {
+			var bmp:Bitmap = myImageLoader.content as Bitmap;
+			checkpointSprite = new Bitmap(bmp.bitmapData);
+			screen.addChild(checkpointSprite);
+
+			isLoaded = true;
 		}
 
 		public function getDead():Boolean {
@@ -43,6 +94,18 @@
 		
 		public function setDead(newDead:Boolean):void {
 			dead = newDead;
+		}
+
+		public function tick():void {
+			if (isLoaded) {
+
+				var pos:b2Vec2 = getBody().GetPosition();
+
+				checkpointSprite.x = pos.x*PlayScreen.WORLD_SCALE-16;
+				checkpointSprite.y = pos.y*PlayScreen.WORLD_SCALE-(32 + checkpointH)/2;
+
+			}
+			
 		}
 	}
 	

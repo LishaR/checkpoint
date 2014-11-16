@@ -55,7 +55,7 @@
 			
 			loadLevel(Levels.Level3);
 			
-			debugDraw();		
+			//debugDraw();		
 			
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
 			stage.addEventListener(MouseEvent.CLICK, onMouseClick);
@@ -126,7 +126,7 @@
 					
 					case "bouncyCheckpoint":
 					case "checkpoint":
-						checkpoint = new Checkpoint(world, obj);
+						checkpoint = new Checkpoint(world, obj, this);
 					
 						var contactListener:ContactListener = new ContactListener(checkpoint.getBody());
 						world.SetContactListener(contactListener);
@@ -306,6 +306,7 @@
             world.DrawDebugData();
 
             player.tick();
+            checkpoint.tick();
         }
 		
 	}
