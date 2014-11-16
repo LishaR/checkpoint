@@ -42,7 +42,7 @@
 		public static var currentLevel:Number;
 				
 		// global variables per level
-		private var checkpointLives:Number = 5;
+		private var checkpointLives:Number = 10;
 		private var world:b2World;
 		private var player:Player;
 		private var goal:Goal;

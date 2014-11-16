@@ -85,7 +85,7 @@
 					if (fixtureBType == "lava") {
 						checkpointBody.GetUserData().setDead(true);
 					}
-                    if (fixtureBType == "spikes") {
+                    if (fixtureBType == "spike") {
                         checkpointBody.GetUserData().setDead(true);
                     }
 				}
