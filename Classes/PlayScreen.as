@@ -35,6 +35,8 @@
 		private static const Y_THRESHOLD:Number = 15;
 		
 		private static const CHECKPOINT_OFFSCREEN:b2Vec2 = new b2Vec2(-99999, -99999);
+		
+		public static var currentLevel:Number;
 				
 		// global variables per level
 		private var checkpointLives:Number = 5;
@@ -47,8 +49,6 @@
 		private var dir = 0;
 		
 		private var maxY:Number;
-		
-		private var currentLevel:Number;
 
 		private var movingPlatforms:Vector.<MovingPlatform>;
 		
@@ -76,13 +76,18 @@
 
 			stage.addEventListener(TransformGestureEvent.GESTURE_SWIPE , onSwipe);
 			
-			loadLevel(Levels.LEVEL_VECTOR[0]);
+			loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			
 			// debugDraw();		
 			
             addEventListener(Event.ENTER_FRAME, onEnterFrame);
+			addEventListener(Event.REMOVED_FROM_STAGE, onRemoveFromStage);
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
 			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+		}
+		
+		private function onRemoveFromStage(e:Event):void {
+			removeEventListener(Event.ENTER_FRAME, onEnterFrame);
 		}
 		
 		// Load one of the levels defined as static consts in Levels
@@ -336,6 +341,8 @@
 		
 		// called every tick
         private function onEnterFrame(e:Event):void {
+			if (!stage) return;
+			
 			pickupTimer -= 1/FRAME_RATE;
 			// collision detection
 			if (checkpoint != null) {
@@ -412,8 +419,8 @@
             world.Step(1/FRAME_RATE, CALCS_PER_TICK, CALCS_PER_TICK);
 			var pos_x:Number = player.getBody().GetWorldCenter().x*WORLD_SCALE;
             var pos_y:Number = player.getBody().GetWorldCenter().y*WORLD_SCALE;
-            x = stage.stageWidth/2-pos_x*scaleX;
-            y = stage.stageHeight/2-pos_y*scaleY;
+            x = Main.stageWidth/2-pos_x*scaleX;
+            y = Main.stageHeight/2-pos_y*scaleY;
             world.ClearForces();
             world.DrawDebugData();
 

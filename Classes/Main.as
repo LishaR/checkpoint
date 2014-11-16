@@ -58,6 +58,7 @@
 			removeChild(currentScreen);
 			currentScreen = playScreen;
 			addChild(playScreen);
+			addChild(playOverlay);
 		}
 		
 		private function onGameOver(e:Event):void {
@@ -66,6 +67,7 @@
 			gameOverScreen = new GameOverScreen();
 			gameOverScreen.addEventListener(NavigationEvent.ON_PRESS_START_OVER, onPressStartOver);
 			
+			removeChild(playOverlay);
 			removeChild(currentScreen);
 			currentScreen = gameOverScreen;
 			addChild(gameOverScreen);
@@ -74,7 +76,7 @@
 		private function onPressStartOver(e:Event):void {
 			removeEventListener(NavigationEvent.ON_PRESS_START_OVER, onPressStartOver);
 			
-			playScreen = new PlayScreen(2);
+			playScreen = new PlayScreen(PlayScreen.currentLevel);
 			playScreen.addEventListener(NavigationEvent.ON_GAME_OVER, onGameOver);
 			
 			removeChild(currentScreen);
