@@ -82,6 +82,7 @@
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
 			leftButton.addEventListener(MouseEvent.MOUSE_DOWN, onLeftButtonPress);
 			rightButton.addEventListener(MouseEvent.MOUSE_DOWN, onRightButtonPress);
+			jumpButton.addEventListener(MouseEvent.MOUSE_DOWN, onJumpButtonPress);
 			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 		}
 		
@@ -272,7 +273,36 @@
 		
 		// for now, mouse clicks throw the checkpoint when available.
 		private function onMouseDown(e:MouseEvent) {
-			// hack to make player wake up.... FIX LATER
+			var playerPos:b2Vec2 = player.getBody().GetWorldCenter();
+			var mousePosX:Number = e.stageX - x;
+			var mousePosY:Number = e.stageY - y;
+			var playerX:Number = playerPos.x*WORLD_SCALE;
+			var playerY:Number = playerPos.y*WORLD_SCALE;
+			
+			var dist:b2Vec2 = new b2Vec2(mousePosX - playerX, mousePosY - playerY);
+			dist.Normalize();
+			dist.Multiply(THROW_STRENGTH);
+			
+			var throwDist:b2Vec2 = dist.Copy();
+			throwDist.Normalize();
+			throwDist.Multiply(THROW_START_DIST);
+			
+			if (player.getCheckpointHeld()) {
+				var spawnPos:b2Vec2 = player.getBody().GetPosition().Copy();
+				spawnPos.Add(throwDist);
+				checkpoint.getBody().SetPosition(spawnPos);
+				
+				var vel:b2Vec2 = player.getBody().GetLinearVelocity().Copy();
+				vel.Add(dist);
+				checkpoint.getBody().SetLinearVelocity(vel);
+				
+				player.setCheckpointHeld(false);
+				pickupTimer = PICKUP_DELAY;
+			}
+		}
+		
+		private function onJumpButtonPress(e:MouseEvent) {
+			e.stopPropagation();
 			if (player.getCanJump()) {
 				player.getBody().SetLinearVelocity(new b2Vec2(player.getBody().GetLinearVelocity().x, -JUMP_STRENGTH));
 				player.setCanJump(false);
@@ -326,8 +356,6 @@
 				if (dist.Length() < CHECKPOINT_PICKUP_DIST && pickupTimer < 0) {
 					player.setCheckpointHeld(true);
 					// LOLZ hack to make the checkpoint disappear without removing it
-					// There isn't an easy way to remove the checkpoint without totally destroying it
-					// and having to recreate it.  
 					checkpoint.getBody().SetPosition(CHECKPOINT_OFFSCREEN);
 				}
 			}
@@ -345,8 +373,7 @@
 				}
 			}
 			
-			if (Input.kd("W", "UP") && player.getCanJump()) {
-				// hack to make player wake up.... FIX LATER
+			if (Input.kd("W", "UP", "SPACE") && player.getCanJump()) {
 				player.getBody().SetLinearVelocity(new b2Vec2(player.getBody().GetLinearVelocity().x, -JUMP_STRENGTH));
 				player.setCanJump(false);
 			}
@@ -356,6 +383,9 @@
 				while (numChildren > 0) {
 					removeChildAt(0);
 				}
+				addChild(leftButton);
+				addChild(rightButton);
+				addChild(jumpButton);
 				loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			} else if (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD) {
 				player.getBody().SetPosition(checkpoint.getBody().GetPosition());
@@ -373,6 +403,9 @@
 					while (numChildren > 0) {
 						removeChildAt(0);
 					}
+					addChild(leftButton);
+					addChild(rightButton);
+					addChild(jumpButton);
 					currentLevel += 1;
 					loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 				}
@@ -385,10 +418,12 @@
             var pos_y:Number = player.getBody().GetWorldCenter().y*WORLD_SCALE;
             x = stage.stageWidth/2-pos_x*scaleX;
             y = stage.stageHeight/2-pos_y*scaleY;
-			leftButton.x = -x + 50;
-			leftButton.y = -y + stage.stageHeight - 100;
-			rightButton.x = -x + 200;
-			rightButton.y = -y + stage.stageHeight - 100;
+			leftButton.x = -x;
+			leftButton.y = -y + stage.stageHeight - leftButton.height;
+			rightButton.x = -x + leftButton.width;
+			rightButton.y = -y + stage.stageHeight - rightButton.height;
+			jumpButton.x = -x + stage.stageWidth - jumpButton.width;
+			jumpButton.y = -y + stage.stageHeight - jumpButton.height;
             world.ClearForces();
             world.DrawDebugData();
 
