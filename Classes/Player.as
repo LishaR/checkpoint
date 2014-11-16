@@ -19,7 +19,6 @@
 	public class Player extends Entity {
 		private static const PLAYER_RESTIT:Number = 0.01; // player bounciness on a 0 to 1 scale
 		private static const PLAYER_FRICTION:Number = 0.3; // player friction
-		private static const WORLD_SCALE:Number = 20; // pixels per meter
 		
 		private var checkpointHeld:Boolean;
 		private var canJump:Boolean;
@@ -33,7 +32,7 @@
 		private var isLoaded:Boolean = false;
 
 		var tileWidth:int = 32;
-		var tileHeight:int = 64;
+		var tileHeight:int = 48;
 		var walkAnimStart:int = 3;
 		var walkAnimEnd:int = 6;
 		var animationIndex:int = 3;
@@ -47,14 +46,14 @@
 
 		private var dead:Boolean;
 
-		private var orientation:Boolean;
+		private var orientation:Boolean = true;
 
 		private var playerW:int;
 		private var playerH:int;
 
 		public function loadSprite():void {
 
-			playerFrame=new BitmapData(32,64,true, 0x00000000);
+			playerFrame=new BitmapData(32,48,true, 0x00000000);
 			
 			myImageLoader = new Loader();
 			//create a Loader instance
@@ -78,12 +77,10 @@
 			
 		}
 		public function addSprite2(e:Event):void {
-			trace(myImageLoader.content);
 			var bmp:Bitmap = myImageLoader2.content as Bitmap;
 			playerSpritesheet = new Bitmap(bmp.bitmapData);
 			
 			playerSprite = new Bitmap(playerFrame);
-			trace(playerSprite);
 			screen.addChild(playerSprite);
 
 			isLoaded = true;
@@ -97,15 +94,15 @@
 			var bodyDef:b2BodyDef = new b2BodyDef();
 			var polygonShape:b2PolygonShape=new b2PolygonShape();		
 
-			playerW = obj.w/2/WORLD_SCALE;
-			playerH = obj.h/2/WORLD_SCALE;
+			playerW = obj.w;
+			playerH = obj.h;
 			
-			polygonShape.SetAsBox(obj.w/2/WORLD_SCALE, obj.h/2/WORLD_SCALE); // temporarily? a box
+			polygonShape.SetAsBox(obj.w/2/PlayScreen.WORLD_SCALE, obj.h/2/PlayScreen.WORLD_SCALE); // temporarily? a box
 			bodyDef.type = b2Body.b2_dynamicBody;
 			bodyDef.fixedRotation = true;
 			
 			// look at body y position to prevent it to be upside down
-			bodyDef.position.Set(obj.x/WORLD_SCALE, obj.y/WORLD_SCALE);
+			bodyDef.position.Set(obj.x/PlayScreen.WORLD_SCALE, obj.y/PlayScreen.WORLD_SCALE);
 			
 			var fixtureDef:b2FixtureDef = new b2FixtureDef();
 			fixtureDef.shape = polygonShape;
@@ -149,10 +146,10 @@
 
 		public function tick():void {
 			if (isLoaded) {
-				if (getBody().GetLinearVelocity().x > 0) {
+				if (getBody().GetLinearVelocity().x > 0.3) {
 					orientation = true;
 				}
-				else if (getBody().GetLinearVelocity().x < 0) {
+				else if (getBody().GetLinearVelocity().x < -0.3) {
 					orientation = false;
 				}
 
@@ -172,8 +169,8 @@
 
 
 
-				playerSprite.x = pos.x*PlayScreen.WORLD_SCALE-16;
-				playerSprite.y = pos.y*PlayScreen.WORLD_SCALE-(32-playerH/2);
+				playerSprite.x = pos.x*PlayScreen.WORLD_SCALE-tileWidth/2;
+				playerSprite.y = pos.y*PlayScreen.WORLD_SCALE+playerH/2- tileHeight + 2;
 
 			}
 			
