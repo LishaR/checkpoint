@@ -18,8 +18,8 @@
 	
 
 	public class Checkpoint extends Entity {
-		private static const CHECKPOINT_RESTIT:Number = 0.1; // checkpoint bounciness on a 0 to 1 scale
-		private static const CHECKPOINT_FRICTION:Number = 0.3; // checkpoint friction
+		private static const CHECKPOINT_RESTIT:Number = 0.01; // checkpoint bounciness on a 0 to 1 scale
+		private static const CHECKPOINT_FRICTION:Number = 0.6; // checkpoint friction
 		
 		private var dead:Boolean;
 		private var isLoaded:Boolean = false;

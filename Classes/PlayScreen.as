@@ -26,6 +26,7 @@
 		private static const CALCS_PER_TICK:int = 5; // iterations of physics engine per tick
 		private static const FRAME_RATE:Number = 30; // frames per second
 		public static const WORLD_SCALE:Number = 20; // pixels per meter
+		private static const ZOOM:Number = 0.7;
 		
 		private static const GRAVITY_STRENGTH:Number = 25; // m/s^2 ... this value isnt' 9.8 since the scales are a bit random.
 		private static const MAX_VELOCITY:Number = 7; // max player velocity in horizontal direction (running)
@@ -36,6 +37,7 @@
 		private static const THROW_START_DIST:Number = 1; // distance from the player the checkpoint spawns from when it is thrown
 		private static const PICKUP_DELAY:Number = 0.2; // min time after the checkpoint is thrown before it can be picked back up
 		private static const Y_THRESHOLD:Number = 15;
+		
 		
 		private static const CHECKPOINT_OFFSCREEN:b2Vec2 = new b2Vec2(-99999, -99999);
 		
@@ -72,8 +74,6 @@
 		// initial PlayScreen setup
  		private function init():void {
 			Input.initialize(stage);
-			scaleX = 1;
-			scaleY = 1;
 
 			loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			
@@ -101,6 +101,10 @@
 			checkpoint = null;
 			pickupTimer = 0;
 			maxY = -99999;
+			
+			scaleX = ZOOM;
+			scaleY = ZOOM;
+			
             var objects:Vector.<Object> = parse(levelData);
 			for each (var obj:Object in objects) {
 				
@@ -304,6 +308,7 @@
 			if (player.getCheckpointHeld()) {
 				var spawnPos:b2Vec2 = player.getBody().GetPosition().Copy();
 				spawnPos.Add(throwDist);
+				spawnPos.Add(new b2Vec2(0, 0.75));
 				checkpoint.getBody().SetPosition(spawnPos);
 				
 				var vel:b2Vec2 = player.getBody().GetLinearVelocity().Copy();
@@ -338,6 +343,7 @@
 			if (player.getCheckpointHeld()) {
 				var spawnPos:b2Vec2 = player.getBody().GetPosition().Copy();
 				spawnPos.Add(throwDist);
+				spawnPos.Add(new b2Vec2(0, 0.75));
 				checkpoint.getBody().SetPosition(spawnPos);
 				
 				var vel:b2Vec2 = player.getBody().GetLinearVelocity().Copy();
@@ -437,7 +443,9 @@
 				
 				loadLevel(Levels.LEVEL_VECTOR[currentLevel]);
 			} else if (player && (player.getDead() || player.getBody().GetPosition().y > maxY + Y_THRESHOLD)) {
-				player.getBody().SetPosition(checkpoint.getBody().GetPosition());
+				var pos:b2Vec2 = checkpoint.getBody().GetPosition().Copy();
+				pos = new b2Vec2(pos.x, pos.y - 0.5);
+				player.getBody().SetPosition(pos);
 				player.setDead(false);
 			} else if (checkpoint && (checkpoint.getDead() || checkpoint.getBody().GetPosition().y > maxY + Y_THRESHOLD)) {
 				checkpointLives -= 1;
